@@ -1,0 +1,409 @@
+import type { Costume } from '@/lib/byte/engine';
+import type { SourceId } from './sources';
+
+export type Flow = { title: string; caption: string; steps: { label: string; detail: string }[] };
+export type Section = { heading: string; body?: string[]; bullets?: string[] };
+export type LinkOut = { label: string; href: string; note?: string };
+
+export type Project = {
+  slug: string;
+  name: string;
+  kicker: string;
+  tagline: string;
+  badge?: string;
+  period: string;
+  kind: string;
+  stack: string[];
+  costume: Costume;
+  byteLine: string;
+  card: { problem: string; solution: string; contribution: string; outcome: string };
+  overview: string[];
+  problem: string[];
+  whyItMatters: string[];
+  role: string[];
+  architecture: Flow;
+  implementation: Section[];
+  decisions: { decision: string; why: string; tradeoff: string }[];
+  challenges: { issue: string; cause: string; fix: string }[];
+  testing: string[];
+  outcomes: { metric: string; label: string }[];
+  limitations: string[];
+  takeaways: string[];
+  demo: LinkOut[];
+  source: LinkOut[];
+  screenshots?: { src: string; alt: string; caption: string; width: number; height: number }[];
+  sources: SourceId[];
+};
+
+export const PROJECTS: Project[] = [
+  {
+    slug: 'saka',
+    name: 'SAKA',
+    kicker: 'Autonomous AI agent · DeFi',
+    tagline: 'A personal AI DeFi agent that plans on 0G, trades on Uniswap, and proves why it made every move.',
+    badge: '2nd place · 0G Private Computer track · ETHGlobal Mumbai 2026',
+    period: 'Nov 5–7, 2026',
+    kind: 'Hackathon team project',
+    stack: ['TypeScript', 'React 19', 'Fastify', 'BullMQ', 'PostgreSQL', 'Redis', 'Docker', 'Azure', '0G', 'Uniswap v4', 'MCP', 'Privy', 'WebAuthn', 'Vitest', 'Playwright'],
+    costume: 'agent',
+    byteLine: '2nd place at ETHGlobal Mumbai. The AI proposes every trade; deterministic checks decide.',
+    card: {
+      problem: 'An AI that can move money has to explain itself, refuse unsafe actions and leave a record nobody can edit.',
+      solution: 'An agent whose AI only proposes. Deterministic scoring, simulation, an independent AI guard and a policy engine decide.',
+      contribution: 'All 41 commits in the public repository are mine, from the 0G integration to the Azure deployment and the interface.',
+      outcome: '2nd place in the 0G track ($1,500), a live demo, and 600+ automated tests.',
+    },
+    overview: [
+      'SAKA gives each user a personal AI agent for decentralized finance. You sign in with a passkey, the agent gets its own wallet, and you ask in plain English: "Swap $5 of ETH to USDC", "Put $10 into ETH/USDC", "Is this hook safe?".',
+      'The agent plans with AI models running on 0G, builds transactions through a Uniswap MCP server the team wrote, and pushes every action through a safety pipeline. Small actions inside your limits run on their own after a 3-second countdown you can cancel. Bigger ones wait for your approval. Risky ones are refused, with the reason shown.',
+    ],
+    problem: [
+      'AI agents are starting to hold wallets. A language model that can sign transactions can also be wrong, be manipulated by a prompt, or act on a stale price, and the money is gone.',
+      'Most "AI trading bots" are black boxes: you cannot see why they acted, and you cannot verify afterwards what they were told or what they decided.',
+    ],
+    whyItMatters: [
+      'For a non-crypto reader: imagine giving an assistant your debit card. You would want it to show you every purchase before it happens, refuse anything suspicious, ask before big spends, and keep receipts that it cannot alter. SAKA is that, for an autonomous agent.',
+      'The same pattern applies outside finance: any agent that takes real actions needs a deterministic layer between the model and the world.',
+    ],
+    role: [
+      'SAKA was built at ETHGlobal Mumbai as a team entry. Every one of the 41 commits in the public repository is authored from my GitHub account. They cover the 0G AI integration, the Market Event Simulator, the safety-guard and execution fixes, passkey sign-in and approvals, the single-VM Azure deployment, and the redesigned interface.',
+      'The ETHGlobal showcase does not list team members, so this page describes the project as a team result and only claims what the commit history shows.',
+    ],
+    architecture: {
+      title: 'How a decision is made',
+      caption: 'Every money-moving intent runs through one deterministic pipeline. The model proposes; code decides.',
+      steps: [
+        { label: 'Prepare', detail: 'Intent → MCP build tools; USD at risk from a mainnet reference price; planHash = sha256 of canonical JSON.' },
+        { label: 'Score', detail: 'Deterministic 0–100 trade score with {rule, penalty, evidence}; token checks; hook safety score.' },
+        { label: 'Simulate', detail: 'eth_call of every built step from the agent wallet; re-simulated right before broadcast.' },
+        { label: 'Guard', detail: '0G Vela 2.0 blocks below 0.8 probability and fails closed if 0G is unreachable.' },
+        { label: 'Policy', detail: 'A pure decide() returns AUTO, STEP_UP, REFUSE or ASK, with value and limit in every reason.' },
+        { label: 'Execute', detail: 'One plan per user at a time, re-quote within 1% or stop, idempotent broadcast, never re-sent on timeout.' },
+        { label: 'Log', detail: 'Canonical JSON of the whole decision uploaded to 0G Storage; the root hash is checked and shown.' },
+      ],
+    },
+    implementation: [
+      {
+        heading: 'AI layer on 0G',
+        bullets: [
+          'Planner (GLM-5.3, private trust mode) with a verified fallback model, a guard (Vela 2.0) and an explainer (0GM-1.0), all through the 0G Router.',
+          'Every call sends verify_tee and a client request ID, and stores the router’s X-Request-ID and trace, so each reply in the UI links to its inference record.',
+        ],
+      },
+      {
+        heading: 'Uniswap MCP server',
+        bullets: [
+          '16 typed tools over the Trading API, LP API, v4 contracts and subgraph, published as a plugin in a fork of Uniswap/uniswap-ai.',
+          'Unsigned-only by design: a build test fails if signing or broadcast code is added. Permit2 flows return typed data plus an HMAC-signed resume token that expires in 120 s.',
+          'Hook safety: reads a hook’s 14 permission bits from its address and scores them against the Uniswap v4 Security Framework.',
+        ],
+      },
+      {
+        heading: 'Wallets, identity and autopilot',
+        bullets: [
+          'Privy server wallets with a per-wallet policy that only allows Uniswap contracts, Permit2 and allowlisted tokens.',
+          'Passkeys (WebAuthn) for sign-in and single-use approvals bound to the plan hash.',
+          'Autopilot: nine detectors check every funded wallet each minute and propose actions with Yes / Change / No, in the app and on Telegram.',
+        ],
+      },
+      {
+        heading: 'Stack',
+        body: ['pnpm + Turborepo monorepo. React 19 + Vite + Tailwind on Vercel. Fastify API, BullMQ worker, PostgreSQL (Prisma) and Redis in Docker on one Azure VM behind Caddy.'],
+      },
+    ],
+    decisions: [
+      { decision: 'The model never holds authority', why: 'A pure policy function makes the final call, so a prompt injection can at most produce a plan that gets refused.', tradeoff: 'More code paths to maintain than letting the LLM call tools directly.' },
+      { decision: 'The guard fails closed', why: 'If the 0G guard is unreachable, nothing executes ("Safety check unavailable").', tradeoff: 'An outage blocks trading entirely.' },
+      { decision: 'Unsigned-only MCP server', why: 'The tool layer can build transactions but never sign or broadcast them; a build test enforces it.', tradeoff: 'Signing has to happen in a separate, narrower component.' },
+      { decision: 'Re-quote before execution', why: 'Prices move between approval and broadcast; anything beyond 1% stops with "Price moved".', tradeoff: 'Some approved trades fail in fast markets.' },
+    ],
+    challenges: [
+      { issue: '"$1 ETH" parsed as 1 ETH', cause: 'Amount parsing confused a USD value with a token quantity.', fix: 'Fixed during live testing alongside three UI bugs (commit history).' },
+      { issue: 'Permit2 swaps reverting', cause: 'Gas limits were too tight for Permit2 flows.', fix: 'Buffered gas limits in execution.' },
+      { issue: 'Testnet prices blocking safe swaps', cause: 'Thin Sepolia liquidity made the guard reject reasonable trades.', fix: 'Adjusted the guard so testnet pricing no longer blocks safe swaps.' },
+    ],
+    testing: [
+      '600+ Vitest tests across shared code, the API (integration tests against Postgres and Redis) and the web app, per the showcase.',
+      'Playwright end-to-end tests against a stateful mock API.',
+      'Live smoke scripts for 0G models, 0G Storage round-trips, Privy wallets and MCP quotes.',
+      'Planner evaluation: 32 of 35 live cases correct (91.4%).',
+    ],
+    outcomes: [
+      { metric: '2nd', label: 'place, 0G Private Computer track' },
+      { metric: '$1,500', label: 'prize' },
+      { metric: '600+', label: 'automated tests' },
+      { metric: '91.4%', label: 'planner eval (32/35)' },
+    ],
+    limitations: [
+      'Execution runs on one testnet (Ethereum Sepolia); mainnet is read-only market data.',
+      'Passkey approvals are built but not yet switched on in the hosted staging environment.',
+      'The Market Event Simulator overlays simulated market data on real reads; the decision is real, the event is not.',
+    ],
+    takeaways: [
+      'Put the model in the proposal path, never in the authority path.',
+      'Make provenance a feature: request IDs and storage hashes turn "trust me" into something a user can check.',
+    ],
+    demo: [{ label: 'Live demo', href: 'https://saka-rust.vercel.app', note: 'Sign in as "demo"' }],
+    source: [
+      { label: 'GitHub repository', href: 'https://github.com/Ayush-Bansal08/SAKA' },
+      { label: 'ETHGlobal showcase', href: 'https://ethglobal.com/showcase/saka-defi-ai-agent-gbb53' },
+      { label: 'Uniswap MCP plugin', href: 'https://github.com/Ayush-Bansal08/uniswap-ai/tree/feat/uniswap-agent-mcp/packages/plugins/uniswap-agent-mcp' },
+    ],
+    screenshots: [
+      { src: '/projects/saka/landing.png', alt: 'SAKA landing page', caption: 'Landing page', width: 1440, height: 900 },
+      { src: '/projects/saka/preview-countdown.png', alt: 'A SAKA trade preview with a cancellable countdown', caption: 'A trade, before it runs: amounts, fees, checks and a 3-second countdown', width: 1440, height: 900 },
+      { src: '/projects/saka/autopilot-simulator.png', alt: 'SAKA Market Event Simulator', caption: 'Market Event Simulator', width: 1440, height: 900 },
+      { src: '/projects/saka/hooks.png', alt: 'SAKA hook safety scores', caption: 'Uniswap v4 hooks with deterministic safety scores', width: 1440, height: 900 },
+    ],
+    sources: ['saka-showcase', 'saka-repo', 'saka-demo', 'saka-mcp', 'resume'],
+  },
+  {
+    slug: 'helios',
+    name: 'Helios',
+    kicker: 'Internal developer platform · Kubernetes',
+    tagline: 'The platform around the app: GitOps delivery, releases that judge themselves, and a Kubernetes operator I wrote in Go.',
+    period: '2026',
+    kind: 'Solo project',
+    stack: ['Go', 'Kubebuilder', 'Kubernetes', 'ArgoCD', 'Argo Rollouts', 'Prometheus', 'Grafana', 'Loki', 'Kyverno', 'Falco', 'Trivy', 'k6', 'Chaos Mesh', 'Azure', 'cert-manager'],
+    costume: 'helmet',
+    byteLine: 'Hard hat on. Helios ships through GitOps and rolls itself back when Prometheus says no.',
+    card: {
+      problem: 'Most Kubernetes projects stop at "I deployed an app". Teams need the platform that lets everyone ship safely.',
+      solution: 'GitOps delivery, metric-gated canary releases, observability, layered security and a custom operator for per-PR preview environments.',
+      contribution: 'Solo: designed, built, broke and fixed every layer, including a Go operator with finalizer-based cleanup.',
+      outcome: 'Runs unchanged on kind locally and k3s on Azure with Let’s Encrypt TLS; autoscaled 1→10 pods under k6 load.',
+    },
+    overview: [
+      'Helios is an internal developer platform on Kubernetes. A git push deploys through ArgoCD; new versions roll out as canaries that query Prometheus mid-rollout and roll back on their own; a custom operator gives every pull request its own isolated preview environment.',
+      'To prove it is app-agnostic, it runs Google’s 11-service Online Boutique and an unrelated Go service, Podinfo, with zero platform changes.',
+    ],
+    problem: ['Shipping safely takes more than a Deployment manifest: drift correction, release gates, monitoring, admission policy, autoscaling and environments for review. Those are usually spread across many hand-run steps.'],
+    whyItMatters: ['Platform engineering is how a team of many developers ships many times a day without breaking production. Each capability here maps to something real teams pay for: Vercel-style previews, progressive delivery, policy-as-code.'],
+    role: ['Solo project. I designed the platform, wrote the Go operator, wired the GitOps and observability stack, and ran the load, chaos and security experiments.'],
+    architecture: {
+      title: 'Releases that judge themselves',
+      caption: 'A canary only advances while live Prometheus data says it is healthy.',
+      steps: [
+        { label: 'git push', detail: 'GitHub is the single source of truth; ArgoCD pulls, syncs and self-heals drift.' },
+        { label: 'Canary 25%', detail: 'Argo Rollouts sends a quarter of traffic to the new version.' },
+        { label: 'Analyse', detail: 'PromQL success rate (non-5xx ÷ total) must stay ≥ 95%: 4 checks, 20 s apart.' },
+        { label: '50 → 75 → 100%', detail: 'Healthy: promote automatically. Degraded: roll back to the last good version.' },
+      ],
+    },
+    implementation: [
+      {
+        heading: 'The PreviewEnvironment operator (Go, Kubebuilder)',
+        bullets: [
+          'A developer applies a 7-line custom resource; the controller creates a namespace, Deployment, Service and Ingress at pr-42.localtest.me.',
+          'Idempotent reconcile loop, finalizer-guaranteed cleanup (zero orphaned resources), least-privilege RBAC generated from Kubebuilder markers.',
+        ],
+      },
+      {
+        heading: 'Security in four layers',
+        bullets: ['Trivy scans images at build time; Kyverno rejects non-compliant workloads at admission (untagged images never reach the cluster); Falco watches runtime syscalls; RBAC limits identities.'],
+      },
+      {
+        heading: 'Proven, not assumed',
+        bullets: [
+          'k6 ramps 100 virtual users; the HPA scales the frontend from 1 to 10 pods, then back down.',
+          'Chaos Mesh kills the frontend pod and injects 2 s network latency to observe degradation.',
+          'One script (setup.sh) rebuilds the entire platform from scratch.',
+        ],
+      },
+    ],
+    decisions: [
+      { decision: 'Metric gate plus health gate', why: 'An AnalysisTemplate checks live traffic; progressDeadlineAbort catches versions that never become ready.', tradeoff: 'Needs real traffic before analysis is meaningful.' },
+      { decision: 'Same manifests locally and in the cloud', why: 'kind and k3s on Azure differ only by ingress host, so what was tested is what runs.', tradeoff: 'Single-node clusters, not high availability.' },
+      { decision: 'Run apps I did not write', why: 'In platform engineering the app is the workload; the platform is the project.', tradeoff: 'Less control over app-level metrics.' },
+    ],
+    challenges: [
+      { issue: 'Grafana crash-looping (432 restarts)', cause: 'Prometheus and Loki datasources both provisioned with isDefault: true.', fix: 'Read the container logs, patched the Loki ConfigMap to isDefault: false.' },
+      { issue: 'Cluster unreachable (x509 unknown authority)', cause: 'kind pins the node IP; Docker changed it after a reboot.', fix: 'Rebuilt the whole platform from setup.sh in minutes.' },
+      { issue: 'ArgoCD install failed (annotations too long)', cause: 'Large CRDs exceed the client-side apply annotation limit.', fix: 'kubectl apply --server-side.' },
+      { issue: 'Canary analysis inconclusive', cause: 'rate() over a window with no scraped traffic yet.', fix: 'Generate load first, wait one scrape cycle, then roll out.' },
+    ],
+    testing: ['Load tests with k6, chaos experiments with Chaos Mesh, live admission-policy rejection, and full rebuilds from a single script.'],
+    outcomes: [
+      { metric: '1 → 10', label: 'pods autoscaled under 100 VUs' },
+      { metric: '≥ 95%', label: 'success-rate gate per canary step' },
+      { metric: '1', label: 'script to rebuild everything' },
+      { metric: '0', label: 'manual deployment steps' },
+    ],
+    limitations: ['A portfolio platform, not a production system with real users.', 'The Azure VM is stopped when idle to control cost, so the live URL is usually offline.'],
+    takeaways: ['Read the logs, don’t guess. Each incident above was solved from evidence, not trial and error.', 'Declarative infrastructure is what makes "rebuild it in minutes" a real recovery plan.'],
+    demo: [{ label: 'Video walkthrough', href: 'https://drive.google.com/file/d/14-x45ra9iRBMOevZ0CqfLridM_HQqiSa/view?usp=sharing' }],
+    source: [
+      { label: 'GitHub repository', href: 'https://github.com/Ayush-Bansal08/k8s-project' },
+      { label: 'Operator controller (Go)', href: 'https://github.com/Ayush-Bansal08/k8s-project/blob/main/operator/internal/controller/previewenvironment_controller.go' },
+    ],
+    sources: ['helios-repo', 'helios-operator', 'helios-video', 'resume'],
+  },
+  {
+    slug: 'dockhealer',
+    name: 'DockHealer',
+    kicker: 'AI developer tool · Local LLM',
+    tagline: 'A local LLM proposes a Dockerfile; deterministic code decides whether it actually works.',
+    period: '2026',
+    kind: 'Solo project',
+    stack: ['Python', 'Docker', 'Ollama', 'Terraform', 'Azure', 'GitHub Actions', 'Trivy', 'pytest'],
+    costume: 'medic',
+    byteLine: 'An LLM writes the Dockerfile; a real build and a running container check its homework.',
+    card: {
+      problem: 'An LLM can write a Dockerfile that looks right and fails only when it runs.',
+      solution: 'Validate → real docker build → hardened smoke test, with a bounded repair loop that knows when to stop for a human.',
+      contribution: 'Solo: CLI, validator, failure classifier, repair loop, evaluation harness and Azure Terraform.',
+      outcome: '186 passing tests; termination is guaranteed regardless of model behaviour.',
+    },
+    overview: [
+      'DockHealer is a Python CLI that containerises small Python and Node projects. A local Ollama model proposes a Dockerfile; ordinary code accepts it only after a 16-rule validator, a real docker build, and a hardened container that answers an HTTP request.',
+      'When a step fails, the evidence is classified, redacted and fed back for a bounded repair, or the tool stops and tells a human.',
+    ],
+    problem: ['Asking a model "is this correct?" is not evidence. Looping "ask again until it builds" can burn unbounded time, follow instructions hidden in build logs, or "fix" a project bug by rewriting the wrong file.'],
+    whyItMatters: ['This is the general problem of putting an unreliable model inside a reliable system. DockHealer treats the model as one component in a harness where every claim is checked by something that cannot be talked into agreeing.'],
+    role: ['Solo project, about 2,300 lines of Python across 14 modules.'],
+    architecture: {
+      title: 'The bounded repair loop',
+      caption: 'Each pass either succeeds, stops for a human, or consumes budget, so the loop always terminates.',
+      steps: [
+        { label: 'Scan', detail: 'Detect language, framework, entrypoint and port; exclude secret-like files; never follow symlinks.' },
+        { label: 'Generate', detail: 'Ollama (qwen2.5-coder:3b, temperature 0, seed 42) writes a Dockerfile.' },
+        { label: 'Validate', detail: '7 error rules and 9 warning rules, before any build is spent.' },
+        { label: 'Build', detail: 'Real docker build on a staged copy of approved files, with timeout and capped, redacted logs.' },
+        { label: 'Smoke test', detail: 'Container with dropped capabilities, no-new-privileges and limits must answer /health or /.' },
+        { label: 'Diagnose', detail: '22 failure classes map to repair, retry or stop; fingerprints detect repeats.' },
+      ],
+    },
+    implementation: [
+      { heading: 'Security model', bullets: ['Build logs are attacker-influenced text: redacted, truncated and fenced as untrusted data in the prompt.', 'The model can only return a Dockerfile, which is re-validated and rebuilt.', 'Smoke containers: --cap-drop ALL, 512 MiB, 1 CPU, 256 PIDs, no mounts, loopback-only port.'] },
+      { heading: 'Infrastructure', bullets: ['Terraform for an Azure Ubuntu VM: NSG allows SSH from a single /32, key-only login, no managed identity.', 'GitHub Actions runs the suite on Python 3.11 and 3.12.'] },
+    ],
+    decisions: [
+      { decision: 'Build and run the image', why: 'A built image is weak evidence; only a running container catches a wrong CMD or a 127.0.0.1 bind.', tradeoff: 'Slower, and needs a Docker daemon.' },
+      { decision: 'Stop on project-level faults', why: 'A dependency pinned by the project itself is not the Dockerfile’s fault; the must-stop scenario only passes with zero model calls.', tradeoff: 'Some fixable-looking failures go to a human.' },
+      { decision: 'Local model', why: 'No paid API, and project source never leaves the machine.', tradeoff: 'CPU latency and weaker repairs than a hosted model.' },
+    ],
+    challenges: [{ issue: 'Generated Dockerfile used a node user in a Python image', cause: 'The model hallucinated a user that does not exist in the base image.', fix: 'The smoke test caught it at container start; the second attempt repaired it (author-reported run).' }],
+    testing: ['186 tests with injected fakes for Docker, Ollama, Trivy and the HTTP probe; they run in under a second.', 'Evaluation protocol fixed before any run: 10 scenarios, one-shot vs full loop, Wilson 95% intervals. Measured results are not published yet.'],
+    outcomes: [
+      { metric: '186', label: 'automated tests' },
+      { metric: '16', label: 'validator rules' },
+      { metric: '22', label: 'failure classes' },
+      { metric: '7', label: 'explicit end states' },
+    ],
+    limitations: ['Measured success rates are not published yet: they require real Docker and Ollama runs.', 'Isolation is accident prevention, not a sandbox for untrusted repositories.'],
+    takeaways: ['Termination should never depend on the model behaving.', 'Write the evaluation protocol before running the evaluation.'],
+    demo: [],
+    source: [
+      { label: 'GitHub repository', href: 'https://github.com/Ayush-Bansal08/Dockhealer' },
+      { label: 'Evaluation protocol', href: 'https://github.com/Ayush-Bansal08/Dockhealer/blob/main/docs/EVAL_PROTOCOL.md' },
+    ],
+    sources: ['dockhealer-repo', 'dockhealer-eval', 'resume'],
+  },
+  {
+    slug: 'pollforge',
+    name: 'PollForge',
+    kicker: 'Event-driven system · Azure AKS',
+    tagline: 'A five-service polyglot voting platform, decomposed, containerised, observed and shipped to Kubernetes on Azure.',
+    period: '2026',
+    kind: 'Solo project',
+    stack: ['Python (Flask)', 'C# (.NET 8)', 'Node.js', 'Redis', 'PostgreSQL', 'Kubernetes', 'Azure AKS', 'ACR', 'GitHub Actions', 'Prometheus', 'cert-manager'],
+    costume: 'party',
+    byteLine: 'Five services, three languages: Flask queues votes, .NET saves them, Node streams results live.',
+    card: {
+      problem: 'Show how a small product decomposes into services that deploy, scale and fail independently.',
+      solution: 'Flask → Redis queue → .NET worker → PostgreSQL → Node.js streaming results over Socket.IO, on AKS.',
+      contribution: 'Solo: services, Kubernetes manifests, OIDC CI/CD to ACR and AKS, observability.',
+      outcome: 'Every commit ships to AKS with SHA-tagged images and no stored cloud passwords.',
+    },
+    overview: ['A browser submits a vote to a Flask service, Redis buffers it, a .NET worker persists it to PostgreSQL, and a Node.js service pushes aggregated results to browsers every second. The same services run locally with Docker Compose and on Azure Kubernetes Service.'],
+    problem: ['The request path should not wait on the database, and each concern (accepting votes, persisting them, showing results) should be deployable and restartable on its own.'],
+    whyItMatters: ['This is the shape of most real backends: a fast front door, a queue, background workers and read models, plus the delivery pipeline that keeps them in sync.'],
+    role: ['Solo project.'],
+    architecture: {
+      title: 'Request and data flow',
+      caption: 'Vote submission is decoupled from database latency; results are eventually consistent.',
+      steps: [
+        { label: 'Vote (Flask)', detail: 'Renders the ballot, assigns a voter cookie, RPUSHes JSON to Redis.' },
+        { label: 'Redis', detail: 'Buffers votes; absorbs short bursts.' },
+        { label: 'Worker (.NET 8)', detail: 'Pops messages and inserts or updates one row per voter in PostgreSQL.' },
+        { label: 'Results (Node.js)', detail: 'GROUP BY vote, broadcast over Socket.IO every second, /metrics for Prometheus.' },
+      ],
+    },
+    implementation: [
+      { heading: 'Delivery', bullets: ['Matrix build of three images in parallel; pushed to ACR tagged with the commit SHA.', 'Azure login through OIDC (no long-lived secret), then kubectl set image and rollout status.'] },
+      { heading: 'Kubernetes', bullets: ['Deployments for stateless services, a PostgreSQL StatefulSet with a persistent volume claim, NGINX Ingress with Let’s Encrypt via cert-manager.', 'ServiceMonitor scraping every 15 s and a WorkerDown alert.'] },
+    ],
+    decisions: [
+      { decision: 'Redis between HTTP and PostgreSQL', why: 'Keeps submission fast and isolates it from database latency.', tradeoff: 'Eventual consistency between vote and results.' },
+      { decision: 'StatefulSet for PostgreSQL only', why: 'Durable state gets stable identity and storage; everything else stays stateless.', tradeoff: 'Single replica, no managed backups yet.' },
+    ],
+    challenges: [{ issue: 'Possible vote loss on worker crash', cause: 'LPOP removes a message before the database write completes.', fix: 'Documented as a known limitation, with Redis Streams and consumer groups as the planned fix.' }],
+    testing: ['Per the résumé: persistent storage verified to survive live pod termination, and chaos testing of self-healing behaviour.', 'The repository is explicit that the pipeline does not yet run automated tests or image scans.'],
+    outcomes: [
+      { metric: '5', label: 'services in 3 languages' },
+      { metric: '0', label: 'stored cloud passwords (OIDC)' },
+      { metric: '1', label: 'commit SHA per release' },
+    ],
+    limitations: ['At-most-once delivery from Redis (LPOP).', 'Default credentials in checked-in manifests are for demonstration only.'],
+    takeaways: ['Writing down the consistency model and failure modes is part of the engineering, not an afterthought.'],
+    demo: [{ label: 'Demo video', href: 'https://drive.google.com/file/d/1pVh277Bao5hEftS_H58uTEaM6GU1tDl0/view?usp=sharing' }],
+    source: [{ label: 'GitHub repository', href: 'https://github.com/Ayush-Bansal08/PollForge' }],
+    sources: ['pollforge-repo', 'pollforge-video', 'resume'],
+  },
+  {
+    slug: 'som-gold',
+    name: 'SOM-Gold',
+    kicker: 'ML research · UNSW Sydney',
+    tagline: 'Self-organizing maps and autoencoders on hyperspectral satellite data, made correct and reproducible.',
+    badge: 'Co-author · paper under review',
+    period: 'May – Aug 2026',
+    kind: 'Research internship (team)',
+    stack: ['Python', 'PyTorch', 'MiniSom', 'scikit-learn', 'EnMAP hyperspectral', 'WFS / GIS'],
+    costume: 'cap',
+    byteLine: 'Research mode: one training-bug fix took gold-unit recall from 0% to 76.6%.',
+    card: {
+      problem: 'A mineral-exploration pipeline whose headline numbers nobody could reproduce, with a model that found no gold-bearing unit at all.',
+      solution: 'Fixed the training bug, audited the pipeline, rebuilt the ground truth from a public API, and added rigorous evaluation.',
+      contribution: 'Second author. Bug fixes, pipeline audit, ground-truth rebuild and evaluation framework.',
+      outcome: 'Recall on the target unit rose from 0% to 76.6%; SOM beats k-means on every metric.',
+    },
+    overview: ['At UNSW Sydney, under Dr. Rohitash Chandra, I worked on SOM-Gold: comparing self-organizing maps, autoencoders and k-means for finding gold-prospective geology in EnMAP hyperspectral imagery.'],
+    problem: ['The model reported 0% recall on the target geological unit because of a training defect, and the ground-truth raster had been exported by hand from desktop GIS and never committed, so results could not be reproduced on another machine.'],
+    whyItMatters: ['Unsupervised models can look plausible while being wrong. Without a correct metric and a reproducible ground truth, a paper’s conclusion is not checkable.'],
+    role: [
+      'Research intern and second author (Cheng Wang, Ayush Bansal, Ehsan Farahbakhsh, Rohitash Chandra). The paper is under review.',
+      'My work: fixing the training bug, auditing and correcting 8 pipeline bugs, rebuilding the ground-truth raster from a public WFS API, and designing the evaluation framework.',
+    ],
+    architecture: {
+      title: 'Reproducible pipeline',
+      caption: 'From public geology data to statistically tested comparisons.',
+      steps: [
+        { label: 'Ground truth', detail: 'NSW Seamless Geology fetched from a public WFS and rasterised onto the EnMAP grid, with no manual GIS export.' },
+        { label: 'Representations', detail: 'SOM, autoencoder and k-means on hyperspectral bands.' },
+        { label: 'Metrics', detail: 'Overall and balanced accuracy, corrected Cohen’s κ, unit recall, ARI, NMI and more.' },
+        { label: 'Significance', detail: 'Hyperparameter sweeps, McNemar tests, stability analysis and ablations.' },
+      ],
+    },
+    implementation: [{ heading: 'Bugs corrected', bullets: ['A training defect that produced 0% recall on the target unit.', "An incorrect Cohen's κ.", 'Mismatched autoencoder data masks.', 'Unseeded PyTorch random number generators.'] }],
+    decisions: [{ decision: 'Rebuild ground truth from a public API', why: 'Anyone can regenerate the exact raster, so the results are reproducible.', tradeoff: 'Relies on the public geology service staying available.' }],
+    challenges: [],
+    testing: ['McNemar significance tests and stability analysis across seeds, plus ablations.'],
+    outcomes: [
+      { metric: '0 → 76.6%', label: 'mineral recall after the fix' },
+      { metric: '8', label: 'pipeline bugs corrected' },
+      { metric: 'All', label: 'metrics: SOM beats k-means' },
+    ],
+    limitations: ['The paper is under review, not yet published.', 'The repository belongs to the UNSW research group.'],
+    takeaways: ['A metric you have not audited is a guess.'],
+    demo: [],
+    source: [
+      { label: 'Research repository', href: 'https://github.com/sydney-machine-learning/remotesensing-SOM' },
+      { label: 'Paper citation', href: 'https://github.com/sydney-machine-learning/remotesensing-SOM#paper-citation' },
+    ],
+    sources: ['som-repo', 'som-citation', 'resume'],
+  },
+];
+
+export const PROJECT_BY_SLUG = Object.fromEntries(PROJECTS.map((p) => [p.slug, p])) as Record<string, Project>;
+export const FEATURED = PROJECTS[0]!;
+export const OTHER_PROJECTS = PROJECTS.slice(1);
