@@ -111,6 +111,8 @@ export function projectsNamedIn(text: string): string[] {
   return NAMED_PROJECTS.filter(([, re]) => re.test(t)).map(([slug]) => slug);
 }
 
+const GENERIC_FAQ = new Set(['projects', 'experience', 'who', 'awards', 'tech']);
+
 export function matchFaq(question: string, project?: string): { faq: Faq; score: number } | null {
   // whole words only ("his work" must not match inside "this work"); a key ending in * matches a word prefix
   const q = ` ${resolveQuery(question, project).toLowerCase().replace(/[^a-z0-9.'\s-]/g, ' ').replace(/\.(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim()} `;
@@ -125,6 +127,8 @@ export function matchFaq(question: string, project?: string): { faq: Faq; score:
     if (named.length && !named.some((slug) => faq.id === slug || faq.id.startsWith(`${slug}-`))) continue;
     let score = 0;
     for (const key of faq.keys) if (has(key)) score = Math.max(score, key.split(' ').length + 1);
+    // a specific topic ("Kubernetes") beats a catch-all ("projects", "experience") on an equal match
+    if (score && GENERIC_FAQ.has(faq.id)) score -= 0.5;
     if (score && (!best || score > best.score)) best = { faq, score };
   }
   return best;

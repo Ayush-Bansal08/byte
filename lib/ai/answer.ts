@@ -257,7 +257,7 @@ function listJoin(xs: string[]) {
  * Circuit breaker: when the live model fails, answer from notes straight away for a while instead of
  * making every visitor wait for the same failure. A bad key or missing model rests longer than a blip.
  */
-const REST_MS: Record<string, number> = { auth: 30 * 60_000, 'model-not-found': 30 * 60_000, quota: 10 * 60_000 };
+const REST_MS: Record<string, number> = { auth: 30 * 60_000, 'model-not-found': 30 * 60_000, quota: 10 * 60_000, overloaded: 30_000 };
 const health = { downUntil: 0, reason: '', checkedAt: 0 };
 
 export function modelStatus(): { live: boolean; reason?: string } {
@@ -303,6 +303,7 @@ function failureReason(err: unknown, aborted: boolean): string {
   if (status === 401 || status === 403 || /API key|permission/i.test(msg)) return 'auth';
   if (status === 404 || /not found|is not supported/i.test(msg)) return 'model-not-found';
   if (status === 429 || /quota|rate/i.test(msg)) return 'quota';
+  if (status === 503 || status === 500 || status === 502 || status === 504 || /overloaded|unavailable/i.test(msg)) return 'overloaded';
   if (status === 400) return 'bad-request';
   if (msg === 'empty') return 'empty';
   if (msg === 'schema' || err instanceof SyntaxError) return 'bad-output';

@@ -46,13 +46,14 @@ function anthropicProvider(apiKey: string, model: string): Provider {
 }
 
 /** Newest general-purpose Flash model this key can call (skips image/audio/live/embedding variants). */
-async function pickFlashModel(ai: GoogleGenAI): Promise<string | null> {
+async function pickFlashModel(ai: GoogleGenAI, exclude: string[] = []): Promise<string | null> {
   const found: string[] = [];
   const pager = await ai.models.list({ config: { pageSize: 100 } });
   for await (const m of pager) {
     const name = (m.name ?? '').replace(/^models\//, '');
     if (!/flash/i.test(name) || /(image|tts|audio|live|embed|vision|exp|8b)/i.test(name)) continue;
     if (m.supportedActions && !m.supportedActions.includes('generateContent')) continue;
+    if (exclude.includes(name)) continue;
     found.push(name);
   }
   const version = (n: string) => Number(n.match(/gemini-(\d+(?:\.\d+)?)/)?.[1] ?? 0);
@@ -106,15 +107,32 @@ function geminiProvider(apiKey: string, configured: string): Provider {
       try {
         response = await call(model, system, user, signal);
       } catch (err) {
-        // The configured name may not exist for this key: discover a working Flash model once, then retry.
         const status = (err as { status?: number }).status;
-        if (resolved || (status !== 404 && status !== 400)) throw err;
-        resolved = true;
-        const next = await pickFlashModel(ai);
-        if (!next || next === model) throw err;
-        console.warn(`[ask] Gemini model "${model}" unavailable (${status}); using "${next}"`);
-        model = provider.model = next;
-        response = await call(model, system, user, signal);
+        if (status === 404 || (status === 400 && !resolved)) {
+          // The configured name may not exist for this key: discover a working Flash model once, then retry.
+          if (resolved) throw err;
+          resolved = true;
+          const next = await pickFlashModel(ai);
+          if (!next || next === model) throw err;
+          console.warn(`[ask] Gemini model "${model}" unavailable (${status}); using "${next}"`);
+          model = provider.model = next;
+          response = await call(model, system, user, signal);
+        } else if (status === 503 || status === 500 || status === 502 || status === 504 || status === 429) {
+          // Google's servers are briefly overloaded (common on the free tier): one quick retry, then a
+          // different Flash model for this answer. The visitor only waits a moment longer.
+          if (signal.aborted) throw err;
+          await new Promise((r) => setTimeout(r, 350));
+          try {
+            response = await call(model, system, user, signal);
+          } catch (again) {
+            const alt = signal.aborted ? null : await pickFlashModel(ai, [model]).catch(() => null);
+            if (!alt) throw again;
+            console.warn(`[ask] Gemini "${model}" overloaded (${status}); answering with "${alt}"`);
+            response = await call(alt, system, user, signal);
+          }
+        } else {
+          throw err;
+        }
       }
       resolved = true;
       return response.text ?? null;

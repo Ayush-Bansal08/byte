@@ -60,3 +60,14 @@ describe('page context helps but never hijacks', () => {
     expect(on('What was his role?', 'helios').answer).toMatch(/Helios/);
   });
 });
+
+describe('specific beats generic', () => {
+  it('a Kubernetes question gets the Kubernetes answer, not the generic project list', () => {
+    const r = offlineAnswer(AskRequest.parse({ question: 'Which of his projects would matter most to a team running Kubernetes in production, and why?', context: { path: '/' } }));
+    expect(r.answer).toMatch(/Helios/);
+    expect(r.answer).not.toMatch(/^Five featured projects/);
+  });
+  it('"What are his projects?" still lists them', () => {
+    expect(offlineAnswer(AskRequest.parse({ question: 'What are his projects?', context: { path: '/' } })).answer).toMatch(/^Five featured projects/);
+  });
+});

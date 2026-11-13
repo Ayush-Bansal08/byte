@@ -266,3 +266,13 @@ describe('basic questions always get a straight answer', () => {
     expect(ask('Is there a live demo of SAKA?').answer).not.toMatch(/based in Jaipur/);
   });
 });
+
+describe('transient overload', () => {
+  it('a 503 is labelled overloaded and rests only briefly', async () => {
+    const req = AskRequest.parse({ question: 'Walk me through how his projects check their own work, project by project', context: { path: '/' } });
+    const busy: ProviderLike = { name: 'gemini', generate: async () => Promise.reject(Object.assign(new Error('The model is overloaded'), { status: 503 })) };
+    const r = await answerQuestion(req, busy);
+    expect(r.fallbackReason).toBe('overloaded');
+    expect(r.answer.length).toBeGreaterThan(20);
+  });
+});
