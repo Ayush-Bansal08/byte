@@ -333,7 +333,7 @@ export async function answerQuestion(
     return res;
   }
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 10_000);
+  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 8_000);
   try {
     const raw = await provider.generate({ system: SYSTEM_PROMPT, user: buildUserPrompt(req, hits), signal: controller.signal });
     if (!raw) throw new Error('empty');

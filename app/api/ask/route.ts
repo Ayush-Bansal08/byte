@@ -76,10 +76,10 @@ export async function GET(req?: NextRequest) {
         ? { system: SYSTEM_PROMPT, user: buildUserPrompt(q, retrieve(q.question, { k: 6 })) }
         : { system: 'Reply with JSON only.', user: 'Return {"answer":"ok","found":true,"citations":[],"action":"none"}' };
       const raw = await provider.generate({ ...input, signal: controller.signal });
-      return json({ ok: Boolean(raw), provider: provider.name, model: provider.model, checkMs, generateMs: Date.now() - t - checkMs, promptChars: input.system.length + input.user.length, sample: probe === 'full' ? (raw ?? '').slice(0, 300) : undefined });
+      return json({ ok: Boolean(raw), provider: provider.name, model: provider.model, settings: provider.info?.(), checkMs, generateMs: Date.now() - t - checkMs, promptChars: input.system.length + input.user.length, sample: probe === 'full' ? (raw ?? '').slice(0, 300) : undefined });
     } catch (err) {
       const status = (err as { status?: number }).status;
-      return json({ ok: false, provider: provider.name, model: provider.model, ms: Date.now() - t, status: status ?? null, aborted: controller.signal.aborted, message: err instanceof Error ? err.message.replace(/key=[^&\s]+/gi, 'key=…').slice(0, 240) : 'error' });
+      return json({ ok: false, provider: provider.name, model: provider.model, settings: provider.info?.(), ms: Date.now() - t, status: status ?? null, aborted: controller.signal.aborted, message: err instanceof Error ? err.message.replace(/key=[^&\s]+/gi, 'key=…').slice(0, 240) : 'error' });
     } finally {
       clearTimeout(timer);
     }

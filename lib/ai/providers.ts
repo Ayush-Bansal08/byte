@@ -10,10 +10,13 @@ export type Provider = {
   generate: (input: GenerateInput) => Promise<string | null>;
   /** Cheap check that the key works and the model exists (no generation, no quota spent). Throws if not. */
   check: () => Promise<void>;
+  /** non-secret settings in use, for the diagnostics probe */
+  info?: () => Record<string, unknown>;
 };
 
 const MAX_OUTPUT = 2000;
-const GEMINI_MAX_OUTPUT = 8192;
+// enough for a 90-word JSON answer plus a little thinking; also stops a runaway generation early
+const GEMINI_MAX_OUTPUT = 2048;
 
 function anthropicProvider(apiKey: string, model: string): Provider {
   const client = new Anthropic({ apiKey, maxRetries: 1 });
@@ -76,7 +79,10 @@ function geminiProvider(apiKey: string, configured: string): Provider {
   // Speed: answers come from supplied evidence, so long "thinking" only adds seconds. Older Flash models
   // switch it off with a zero budget, newer ones take a level; we try the fastest form the model accepts.
   const THINKING: (ThinkingConfig | undefined)[] = [{ thinkingBudget: 0 }, { thinkingLevel: ThinkingLevel.MINIMAL }, { thinkingLevel: ThinkingLevel.LOW }, undefined];
-  let thinking = 0;
+  // Gemini 3+ ignores a zero thinking budget and thinks at full depth (20 s+ on real questions): it needs a
+  // thinking *level*. Older Flash models switch thinking off with a zero budget.
+  const thinkingFor = (m: string) => (/gemini-(\d+)/.exec(m)?.[1] && Number(/gemini-(\d+)/.exec(m)![1]) >= 3 ? 1 : 0);
+  let thinking = thinkingFor(configured);
   const once = (m: string, system: string, user: string, signal: AbortSignal) =>
     ai.models.generateContent({
       model: m,
@@ -123,6 +129,7 @@ function geminiProvider(apiKey: string, configured: string): Provider {
           if (!next || next === model) throw err;
           console.warn(`[ask] Gemini model "${model}" unavailable (${status}); using "${next}"`);
           model = provider.model = next;
+          thinking = thinkingFor(model);
           response = await call(model, system, user, signal);
         } else if (status === 503 || status === 500 || status === 502 || status === 504 || status === 429) {
           // Google's servers are busy (common on the free tier): answer from a backup Flash model straight
@@ -139,6 +146,7 @@ function geminiProvider(apiKey: string, configured: string): Provider {
       resolved = true;
       return response.text ?? null;
     },
+    info: () => ({ thinking: THINKING[thinking] ?? 'model default', maxOutputTokens: GEMINI_MAX_OUTPUT, backup: backup ?? null }),
     async check() {
       // listing models proves the key works; make sure the model we will call is one of them
       const pager = await ai.models.list({ config: { pageSize: 100 } });
