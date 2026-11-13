@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createHash } from 'node:crypto';
-import { answerQuestion, checkProvider } from '@/lib/ai/answer';
+import { answerQuestion, buildUserPrompt, checkProvider, SYSTEM_PROMPT } from '@/lib/ai/answer';
+import { retrieve } from '@/lib/ai/retrieve';
 import { getProvider } from '@/lib/ai/providers';
 import { RateLimiter } from '@/lib/ai/ratelimit';
 import { AskRequest } from '@/lib/ai/schema';
@@ -59,7 +60,8 @@ export async function GET(req?: NextRequest) {
   const provider = getProvider();
   // Diagnostics: ?probe=1 times one tiny real generation. Shows the model name, timing and a secret-free
   // reason; at most once a minute so it can't be used to burn the quota.
-  if (req?.nextUrl.searchParams.get('probe') === '1' && provider) {
+  const probe = req?.nextUrl.searchParams.get('probe');
+  if ((probe === '1' || probe === 'full') && provider) {
     if (Date.now() - lastProbe < 60_000) return json({ error: 'Probe ran less than a minute ago.' }, 429);
     lastProbe = Date.now();
     const t = Date.now();
@@ -68,8 +70,13 @@ export async function GET(req?: NextRequest) {
     try {
       await provider.check();
       const checkMs = Date.now() - t;
-      const raw = await provider.generate({ system: 'Reply with JSON only.', user: 'Return {"answer":"ok","found":true,"citations":[],"action":"none"}', signal: controller.signal });
-      return json({ ok: Boolean(raw), provider: provider.name, model: provider.model, checkMs, generateMs: Date.now() - t - checkMs });
+      // 'full' sends a real visitor-sized request (system prompt + whole knowledge base)
+      const q = AskRequest.parse({ question: 'Which of his projects would matter most to a team running Kubernetes in production, and why?', context: { path: '/' } });
+      const input = probe === 'full'
+        ? { system: SYSTEM_PROMPT, user: buildUserPrompt(q, retrieve(q.question, { k: 6 })) }
+        : { system: 'Reply with JSON only.', user: 'Return {"answer":"ok","found":true,"citations":[],"action":"none"}' };
+      const raw = await provider.generate({ ...input, signal: controller.signal });
+      return json({ ok: Boolean(raw), provider: provider.name, model: provider.model, checkMs, generateMs: Date.now() - t - checkMs, promptChars: input.system.length + input.user.length, sample: probe === 'full' ? (raw ?? '').slice(0, 300) : undefined });
     } catch (err) {
       const status = (err as { status?: number }).status;
       return json({ ok: false, provider: provider.name, model: provider.model, ms: Date.now() - t, status: status ?? null, aborted: controller.signal.aborted, message: err instanceof Error ? err.message.replace(/key=[^&\s]+/gi, 'key=…').slice(0, 240) : 'error' });

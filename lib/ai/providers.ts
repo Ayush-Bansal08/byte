@@ -46,7 +46,7 @@ function anthropicProvider(apiKey: string, model: string): Provider {
 }
 
 /** Newest general-purpose Flash model this key can call (skips image/audio/live/embedding variants). */
-async function pickFlashModel(ai: GoogleGenAI, exclude: string[] = []): Promise<string | null> {
+async function pickFlashModel(ai: GoogleGenAI, exclude: string[] = [], preferLite = false): Promise<string | null> {
   const found: string[] = [];
   const pager = await ai.models.list({ config: { pageSize: 100 } });
   for await (const m of pager) {
@@ -58,7 +58,8 @@ async function pickFlashModel(ai: GoogleGenAI, exclude: string[] = []): Promise<
   }
   const version = (n: string) => Number(n.match(/gemini-(\d+(?:\.\d+)?)/)?.[1] ?? 0);
   // newest version first; within a version prefer the stable name over -lite and -preview variants
-  found.sort((a, b) => version(b) - version(a) || Number(/lite|preview/.test(a)) - Number(/lite|preview/.test(b)));
+  const variant = (n: string) => (/preview/.test(n) ? 2 : /lite/.test(n) ? (preferLite ? 0 : 1) : preferLite ? 1 : 0);
+  found.sort((a, b) => version(b) - version(a) || variant(a) - variant(b));
   return found[0] ?? null;
 }
 
@@ -66,6 +67,12 @@ function geminiProvider(apiKey: string, configured: string): Provider {
   const ai = new GoogleGenAI({ apiKey });
   let model = configured;
   let resolved = false;
+  /** a second model for when the main one is overloaded; looked up once, then remembered */
+  let backup: string | null | undefined;
+  const getBackup = async () => {
+    if (backup === undefined) backup = await pickFlashModel(ai, [model], true).catch(() => null);
+    return backup;
+  };
   // Speed: answers come from supplied evidence, so long "thinking" only adds seconds. Older Flash models
   // switch it off with a zero budget, newer ones take a level; we try the fastest form the model accepts.
   const THINKING: (ThinkingConfig | undefined)[] = [{ thinkingBudget: 0 }, { thinkingLevel: ThinkingLevel.MINIMAL }, { thinkingLevel: ThinkingLevel.LOW }, undefined];
@@ -118,18 +125,13 @@ function geminiProvider(apiKey: string, configured: string): Provider {
           model = provider.model = next;
           response = await call(model, system, user, signal);
         } else if (status === 503 || status === 500 || status === 502 || status === 504 || status === 429) {
-          // Google's servers are briefly overloaded (common on the free tier): one quick retry, then a
-          // different Flash model for this answer. The visitor only waits a moment longer.
+          // Google's servers are busy (common on the free tier): answer from a backup Flash model straight
+          // away instead of waiting on the busy one again.
           if (signal.aborted) throw err;
-          await new Promise((r) => setTimeout(r, 350));
-          try {
-            response = await call(model, system, user, signal);
-          } catch (again) {
-            const alt = signal.aborted ? null : await pickFlashModel(ai, [model]).catch(() => null);
-            if (!alt) throw again;
-            console.warn(`[ask] Gemini "${model}" overloaded (${status}); answering with "${alt}"`);
-            response = await call(alt, system, user, signal);
-          }
+          const alt = await getBackup();
+          if (!alt) throw err;
+          console.warn(`[ask] Gemini "${model}" busy (${status}); answering with "${alt}"`);
+          response = await call(alt, system, user, signal);
         } else {
           throw err;
         }
