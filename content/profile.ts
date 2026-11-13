@@ -3,10 +3,10 @@ import type { SourceId } from './sources';
 export const PROFILE = {
   name: 'Ayush Bansal',
   role: 'Software engineer',
-  headline: 'I build software that doesn’t take its own word for it.',
+  headline: 'I build backends and AI agents, then I try to break them.',
   /** Shown under the headline. Deliberately free of awards and employers: those have their own sections. */
   intro:
-    'Third-year engineering student at LNMIIT, working across backend, cloud and AI agents. In everything below, the clever part never gets the last word. Something stubborn, measurable and deliberately boring does.',
+    'I’m a third-year student at LNMIIT. Most of my work lives behind the screen: APIs, queues, deploy pipelines, Kubernetes, and AI agents that are allowed to do real things. I spend as long on the ways they fail as on the happy path, and the write-ups below show both.',
   /** Factual one-paragraph bio for search previews, llms.txt and Ask Byte (not shown on the page). */
   summary:
     'Backend services, cloud platforms and AI agents. I placed 2nd in the 0G track at ETHGlobal Mumbai 2026 with SAKA, an autonomous DeFi agent, shipped production APIs and AI voice-agent features at Finn, and co-authored ML research at UNSW Sydney.',
@@ -20,15 +20,17 @@ export const PROFILE = {
   },
   seeking: 'Software engineering internships in backend, cloud/platform, AI/ML and AI agents.',
   email: 'ab262133@gmail.com',
+  phone: '+91 99112 23788',
   links: {
     github: 'https://github.com/Ayush-Bansal08',
     linkedin: 'https://www.linkedin.com/in/ayush-bansal-21b12a311/',
     email: 'mailto:ab262133@gmail.com',
+    phone: 'tel:+919911223788',
   },
   about: [
-    'I like the parts of software that have to be right the first time: the queue that can’t drop a message, the agent that has to refuse a bad trade, the release that has to know when to back out.',
-    'Clever components are easy to bolt on. I’m more interested in what happens when they’re wrong, so I design that part first: the exit condition, the check that can’t be argued with, the log that shows what actually happened.',
-    'If a number goes on a slide, I want to be able to rebuild it from scratch on someone else’s machine. That habit started in research and now follows me into every repo.',
+    'I’m based in Gurgaon and study electronics and communication engineering at LNMIIT, but most of my time goes into software. Backend work pulls me in because it’s where things break quietly: a message goes missing, a deploy stops halfway, a number looks right and isn’t.',
+    'When I build something, I start by asking how it fails. What happens if the network drops, if the AI says something odd, if someone clicks twice? Those cases get tests before I call anything finished.',
+    'Research at UNSW taught me to check numbers before I believe them. So every figure on this site has a link next to it, and you’re welcome to check mine.',
   ],
 } as const;
 
@@ -91,7 +93,7 @@ export const EXPERIENCE: Role[] = [
     title: 'Software Engineering Intern',
     period: 'May 2026 – Jul 2026',
     place: 'Bengaluru, India',
-    summary: 'Production engineering on a live AI product, where a bad deploy has real customers on the other end.',
+    summary: 'Shipping code to a live AI product with real customers on the other end.',
     bullets: [
       'Merged 25+ pull requests across 5+ production services, including AI voice agents, backend APIs, authentication, WhatsApp automation, deployment infrastructure and customer-facing dashboards.',
       'Built LLM-powered agent workflows, backend services, REST APIs and event-driven workflows behind real-time conversational AI and enterprise customer interactions.',
@@ -106,7 +108,7 @@ export const EXPERIENCE: Role[] = [
     title: 'AI/ML Research Intern, under Dr. Rohitash Chandra',
     period: 'May 2026 – Aug 2026',
     place: 'Sydney, Australia (remote)',
-    summary: 'Turning a research pipeline nobody could reproduce into one anybody can.',
+    summary: 'Took a research pipeline nobody could rerun and made it one anybody can.',
     bullets: [
       'Fixed a critical training bug that raised mineral recall from 0% to 76.6%; co-author of the SOM-Gold paper, currently under review.',
       "Audited the unsupervised ML pipeline and corrected 8 bugs, including an incorrect Cohen's κ, mismatched autoencoder data masks and unseeded PyTorch RNGs, and rebuilt an irreproducible ground-truth raster from a public government WFS API.",
@@ -124,7 +126,7 @@ export const SKILLS: SkillGroup[] = [
   {
     id: 'backend',
     title: 'Backend and APIs',
-    capability: 'Services, queues and data models that keep working when traffic or dependencies misbehave.',
+    capability: 'Services and queues that keep going when traffic spikes or something downstream falls over.',
     items: ['TypeScript / Node.js (Fastify, Express)', 'Python (Flask)', 'REST and WebSockets', 'BullMQ and Redis queues', 'PostgreSQL (Prisma), MongoDB'],
     evidence: [
       { label: 'SAKA', href: '/work/saka' },
@@ -153,7 +155,7 @@ export const SKILLS: SkillGroup[] = [
   {
     id: 'ai',
     title: 'AI agents and ML',
-    capability: 'Agents with guardrails, plus evaluation that holds up to scrutiny.',
+    capability: 'Agents with hard limits on what they can do, and evaluation done with real statistics.',
     items: ['LLM agents and MCP servers', 'Ollama, LangChain, Hugging Face', 'PyTorch, scikit-learn, SOMs, autoencoders', 'Evaluation: McNemar tests, Wilson intervals, ablations'],
     evidence: [
       { label: 'SAKA', href: '/work/saka' },

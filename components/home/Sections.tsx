@@ -67,12 +67,12 @@ export function Hero() {
             behavior="greet"
             mood="happy"
             bubble="left"
-            message="Psst. I’m Byte, the blinking cursor next to his name. I got bored and grew legs. Tap me any time."
+            message="Hi! I’m Byte, the cursor from his name. I grew legs. Tap me and ask anything."
             className="h-[112px] min-w-[84px] flex-1 lg:hidden"
           />
         </div>
         <h1 id="hero-title" className="mt-3 text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.035em] sm:text-6xl lg:text-[4.2rem]">
-          I build software that <span className="ink">doesn’t take its own word for it.</span>
+          I build backends and AI agents, <span className="ink">then I try to break them.</span>
         </h1>
         <p className="mt-6 max-w-xl text-[1.08rem] text-muted">{PROFILE.intro}</p>
         <div className="mt-8 flex flex-wrap gap-2.5">
@@ -97,7 +97,7 @@ export function Hero() {
           mood="happy"
           bubble="left"
           align="right"
-          message="Psst. I’m Byte, the blinking cursor next to his name. I got bored and grew legs. Tour?"
+          message="Hi! I’m Byte, the cursor from his name. I grew legs and read every page here. Want the quick tour?"
           choices={[
             { id: 'tour', label: 'Show me his best work' },
             { id: 'ask', label: 'Ask a question' },
@@ -140,7 +140,7 @@ export function Hero() {
               <dt className="text-faint">
                 <span className="text-accent">$</span> byte --help
               </dt>
-              <dd className="term-caret text-text">tap the little guy. he’s read everything here.</dd>
+              <dd className="term-caret text-text">usage: tap me, ask about any project</dd>
             </div>
           </dl>
         </div>
@@ -155,7 +155,7 @@ export function Achievements() {
       <div className="container-page py-14">
         <div className="flex items-end gap-4">
           <h2 id="achievements-title" className="kicker min-w-0 pb-6">
-            <span className="glow-num text-accent">01</span> · Trophy shelf
+            <span className="glow-num text-accent">01</span> · Wins
           </h2>
           <CharacterStage id="achievements" behavior="celebrate" costume="crown" mood="star" message="Judges picked two of these. The third is still with the reviewers. Fingers crossed." className="h-[112px] min-w-[84px] flex-1" />
         </div>
@@ -201,9 +201,9 @@ export function Work() {
         id="work"
         index="02"
         kicker="Selected work"
-        title="Five projects. One stubborn habit."
-        intro="Every case study goes past the demo: the calls I’d defend, the bugs that bit back, and what still doesn’t work."
-        stage={{ behavior: 'point', costume: 'detective', mood: 'wink', message: 'Pick a card, any card. I’ll hop over and give you the backstage version.', lookAt: 'saka' }}
+        title="Things I’ve built"
+        intro="Open any of them for the full story, including what broke and what still isn’t finished."
+        stage={{ behavior: 'point', costume: 'detective', mood: 'wink', message: 'Pick any card and I’ll hop over and tell you about it.', lookAt: 'saka' }}
       />
 
       <article id="saka" aria-labelledby="saka-title" data-tinted="" style={{ '--tint': p.tint } as React.CSSProperties} className="card relative p-5 sm:p-8">
@@ -342,7 +342,7 @@ export function Experience() {
           index="03"
           kicker="Experience"
           title="One summer, two very different jobs"
-          stage={{ behavior: 'point', costume: 'headset', mood: 'happy', lookAt: 'role-finn', message: 'Left tab: production. Right tab: peer review. He kept both open all summer.' }}
+          stage={{ behavior: 'point', costume: 'headset', mood: 'happy', lookAt: 'role-finn', message: 'Same summer, both jobs. One in production, one in a research paper.' }}
         />
         <ol className="rail relative space-y-10 border-l pl-6 sm:pl-8">
           {EXPERIENCE.map((r) => (
@@ -365,7 +365,7 @@ export function Experience() {
                   costume={r.id === 'unsw' ? 'cap' : 'headset'}
                   mood={r.id === 'unsw' ? 'focused' : 'happy'}
                   lookAt={`role-${r.id}`}
-                  message={r.id === 'unsw' ? 'Detective work: the rocks were fine all along. The training code was the culprit.' : 'Notice the mix: AI features up front, and the APIs, queues and deploys that keep them standing.'}
+                  message={r.id === 'unsw' ? 'Remote internship with a Sydney lab. The SOM-Gold write-up has the details.' : 'Voice agents in front, APIs and deploys behind them. He worked on both.'}
                   className="h-[104px] min-w-[84px] flex-1"
                 />
               </div>
@@ -471,9 +471,9 @@ export function About() {
             <span className="glow-num text-accent">05</span> · About
           </p>
           <h2 id="about-title" className="mt-2 text-3xl font-semibold sm:text-4xl">
-            Why I build like this
+            A bit about me
           </h2>
-          <CharacterStage id="about" behavior="wave" costume="beanie" mood="happy" message="Off the clock for a second. This bit is about how he thinks, not what he’s won." className="mt-4 h-[118px] w-full" align="left" bubble="right" />
+          <CharacterStage id="about" behavior="wave" costume="beanie" mood="happy" message="Quieter section. This one’s about him rather than the projects." className="mt-4 h-[118px] w-full" align="left" bubble="right" />
         </div>
         <div className="space-y-5 text-[1.05rem] text-muted">
           {PROFILE.about.map((p) => (
@@ -496,15 +496,20 @@ export function Contact() {
                 <span className="glow-num text-accent">06</span> · Contact
               </p>
               <h2 id="contact-title" className="mt-2 text-3xl font-semibold sm:text-5xl">
-                Got something that <span className="ink">has to work</span>?
+                Hiring an intern? <span className="ink">Let’s talk.</span>
               </h2>
             </div>
-            <CharacterStage id="contact" behavior="wave" mood="heart" message="This is where I hand you over. No forms, no bots (well, except me). Just his inbox." className="h-[118px] min-w-[84px] flex-1" />
+            <CharacterStage id="contact" behavior="wave" mood="heart" message="This is where I hand you over. No forms. Just his inbox and his phone." className="h-[118px] min-w-[84px] flex-1" />
           </div>
-          <p className="mt-5 max-w-xl text-muted">I’m after software engineering internships in backend, cloud and AI. Email is the fastest way to reach me; LinkedIn and GitHub work too.</p>
+          <p className="mt-5 max-w-xl text-muted">I’m looking for software engineering internships in backend, cloud and AI. Email or call me, whichever’s easier. LinkedIn and GitHub work too.</p>
           <a href={PROFILE.links.email} className="mt-7 inline-block break-all text-2xl font-semibold text-accent underline decoration-accent/40 underline-offset-[6px] transition-colors hover:decoration-accent sm:text-3xl">
             {PROFILE.email}
           </a>
+          <p className="mt-3">
+            <a href={PROFILE.links.phone} className="font-mono text-lg text-text underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-accent">
+              {PROFILE.phone}
+            </a>
+          </p>
           <div className="mt-8 flex flex-wrap gap-2.5">
             <a href={PROFILE.links.linkedin} target="_blank" rel="noreferrer" className="btn">
               LinkedIn <External />

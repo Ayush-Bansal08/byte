@@ -194,7 +194,7 @@ export const FAQ: Faq[] = [
   {
     id: 'phone',
     keys: ['phone', 'mobile number', 'call him', 'whatsapp', 'contact number'],
-    answer: 'Email is the quickest way to reach him: ab262133@gmail.com. His full contact details are on the résumé PDF, which you can download from the résumé page.',
+    answer: 'You can call or WhatsApp him on +91 99112 23788, or email ab262133@gmail.com.',
     sources: ['resume'],
     action: { type: 'goto', target: 'contact' },
   },
