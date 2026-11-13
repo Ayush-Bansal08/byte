@@ -173,4 +173,13 @@ export const SKILLS: SkillGroup[] = [
   },
 ];
 
+/** "Technical Skills" exactly as listed on the résumé (Nov 2026). Used to answer "does he know X?". */
+export const RESUME_TECH: Record<string, string[]> = {
+  Languages: ['Python', 'JavaScript', 'TypeScript', 'Java', 'C/C++', 'C#', 'Bash', 'Go'],
+  Technologies: ['React.js', 'Next.js', 'Node.js', 'Express.js', 'Flask', 'Git', 'GitHub', 'MongoDB', 'PostgreSQL', 'Redis', 'WebSockets', 'REST APIs', 'GCP', 'Postman', 'Inngest', 'HTML/CSS', 'pytest'],
+  'AI/ML': ['LLMs', 'Ollama', 'NLP', 'LangChain', 'Hugging Face', 'FAISS', 'scikit-learn', 'NumPy', 'Pandas', 'PyTorch'],
+  Web3: ['0G', 'Uniswap', 'Privy'],
+  'DevOps and cloud': ['Docker', 'Kubernetes', 'Terraform', 'GitHub Actions', 'CI/CD', 'Helm', 'Azure', 'AKS', 'ACR', 'VNet/NSG', 'Linux', 'Nginx', 'Prometheus', 'Grafana', 'cert-manager', 'Trivy', 'OIDC'],
+};
+
 export const LANGUAGES = ['Python', 'TypeScript', 'JavaScript', 'Go', 'Java', 'C / C++', 'C#', 'Bash'];

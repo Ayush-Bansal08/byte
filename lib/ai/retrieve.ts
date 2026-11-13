@@ -105,15 +105,26 @@ const NAMED_PROJECTS: [string, RegExp][] = [
   ['som-gold', /\bsom(?:[- ]?gold)?\b/],
 ];
 
+/** Project slugs a piece of text names explicitly ("SAKA", "dock healer", "SOM-Gold"…). */
+export function projectsNamedIn(text: string): string[] {
+  const t = text.toLowerCase();
+  return NAMED_PROJECTS.filter(([, re]) => re.test(t)).map(([slug]) => slug);
+}
+
 export function matchFaq(question: string, project?: string): { faq: Faq; score: number } | null {
-  const q = ` ${resolveQuery(question, project).toLowerCase()} `;
-  const named = NAMED_PROJECTS.filter(([, re]) => re.test(question.toLowerCase())).map(([slug]) => slug);
+  // whole words only ("his work" must not match inside "this work"); a key ending in * matches a word prefix
+  const q = ` ${resolveQuery(question, project).toLowerCase().replace(/[^a-z0-9.'\s-]/g, ' ').replace(/\.(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim()} `;
+  // the project the question is about: named outright, or "this/it" on that project's page.
+  // (Not the name silently appended for short questions: "How can I contact him?" on Helios is about contact.)
+  const named = projectsNamedIn(question);
+  if (!named.length && project && /(this|it|its|that|here)/i.test(question)) named.push(project);
+  const has = (key: string) => (key.endsWith('*') ? q.includes(` ${key.slice(0, -1)}`) : q.includes(` ${key} `));
   let best: { faq: Faq; score: number } | null = null;
   for (const faq of FAQ) {
     // "What makes DockHealer different…" must not get the general Docker/Kubernetes answer
     if (named.length && !named.some((slug) => faq.id === slug || faq.id.startsWith(`${slug}-`))) continue;
     let score = 0;
-    for (const key of faq.keys) if (q.includes(key)) score = Math.max(score, key.split(' ').length + 1);
+    for (const key of faq.keys) if (has(key)) score = Math.max(score, key.split(' ').length + 1);
     if (score && (!best || score > best.score)) best = { faq, score };
   }
   return best;

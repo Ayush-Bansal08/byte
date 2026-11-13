@@ -29,6 +29,7 @@ Build and evaluation log for 12–13 Nov 2026. Everything below was observed in 
 | 6 | Byte looked choppy mid-jump on phones (30 fps everywhere) | Full frame rate while Byte moves, 30 fps only while it stands still |
 | 7 | No sound on phones (user report): audio unlocked only on the first `pointerdown`, which on touch screens is usually a scroll and is not a user gesture; effects peaked at 1–4% volume | Unlock retried on every tap/click/key until audio actually runs (with the silent-buffer trick for WebKit); levels ×3 behind a limiter; turning sound on plays a chirp |
 | 7 | Byte felt slow on phones (user report). Measured at 4× CPU: line appeared ~0.17 s after landing; re-entries took ~0.55 s; decisions waited out the whole fling | Byte commits the instant scrolling stops (`scrollend`), 0.08 s debounce otherwise, snappier gravity (×1.27) and quicker off-screen re-entries (×1.5), line shown on the touchdown frame. Now: commits within ~0.1 s of scroll end, lands 0.45–0.73 s later, speaks on landing |
+| 8 | Ask Byte slow, offline when the key failed, and unable to answer basics like "what is his name" (user screenshots) | Instant verified answers for common questions; live model gets the whole knowledge base with thinking off; circuit breaker falls back to notes instantly when the key fails; self-healing Gemini model choice; offline engine answers names, studies, location, skills ("does he know X?" from résumé and project stacks, honest when not), per-project how/role/results/bugs, strengths, teamwork and common terms; whole-word matching and page context that can't hijack unrelated questions. 29 real visitor questions are now a regression test |
 
 Personality work driven by direct feedback: section moods (star, heart, wink…), 12 hats with front-flip swaps, random tools aimed at the subject, bouncier gait and landings, idle flourishes, in-bubble Q&A, "Show me" → curtain, quiet sound effects with a mute button.
 
@@ -51,7 +52,7 @@ Personality work driven by direct feedback: section moods (star, heart, wink…)
 ## Test results (final run)
 
 - `tsc --noEmit`: pass. `eslint .`: 0 errors, 0 warnings.
-- Vitest: **53 / 53** pass.
+- Vitest: **106 / 106** pass (including 29 real visitor questions answered offline).
 - Playwright: **40 / 40** pass (desktop + mobile projects), including axe WCAG 2.2 AA (no serious/critical violations on `/`, `/work/saka`, `/resume`, `/playground`).
 - `next build`: pass; all pages static except `/api/ask`.
 

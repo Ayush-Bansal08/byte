@@ -214,7 +214,7 @@ export function ChatPanel() {
                         </button>
                       )}
                       <span className="font-mono text-[0.64rem] text-faint">
-                        {m.res.mode === 'ai' ? `AI answer (${m.res.provider === 'gemini' ? 'Gemini' : 'Claude'})` : mode?.mode === 'ai' && !m.res.fallbackReason ? 'Verified answer · instant' : 'Curated answer (offline)'}
+                        {m.res.mode === 'ai' ? `AI answer (${m.res.provider === 'gemini' ? 'Gemini' : 'Claude'})` : mode?.mode === 'ai' && !m.res.fallbackReason ? 'Verified answer · instant' : `Curated answer (offline${m.res.fallbackReason ? ` · ${m.res.fallbackReason}` : ''})`}
                       </span>
                     </span>
                     {m.res.notice && <span className="mt-1 block text-[0.72rem] text-faint">{m.res.notice}</span>}

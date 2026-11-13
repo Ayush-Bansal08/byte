@@ -126,18 +126,148 @@ export const CHUNKS: Chunk[] = buildChunks();
 
 // ------------------------------------------------------------ offline answers
 export type Faq = { id: string; keys: string[]; answer: string; sources: SourceId[]; action?: { type: 'goto'; target: string } };
+// An id starting with a project slug (saka-, helios-…) ties an answer to that project: it is still used when the
+// question names the project, while general answers step aside so the project's own material answers.
 
 /** Curated, verified answers used when no model key is configured. */
 export const FAQ: Faq[] = [
   {
     id: 'who',
-    keys: ['who is ayush', 'who is he', 'about ayush', 'introduce', 'tell me about', 'who are you talking'],
+    keys: ['who is ayush', 'who is he', 'about ayush', 'introduce', 'tell me about him', 'tell me about ayush', 'about yourself', 'who are you talking', 'what does he do', 'what does ayush do', 'summary', 'summarize', 'tl;dr', 'tldr'],
     answer:
       'Ayush Bansal is a software engineering student at LNMIIT Jaipur (graduating 2028) who builds backend systems, cloud platforms and AI agents. He placed 2nd in the 0G track at ETHGlobal Mumbai 2026 with SAKA, interned as a software engineer at Finn, and was an AI/ML research intern at UNSW Sydney.',
     sources: ['resume', 'gh-profile'],
   },
   {
-    id: 'ethglobal',
+    id: 'name',
+    keys: ['his name', 'whats his name', 'what is his name', 'full name', 'name of the', 'who made this', 'whose portfolio', 'whose site', 'whose website'],
+    answer: 'His name is Ayush Bansal. This is his portfolio: he is a software engineering student at LNMIIT Jaipur who builds backend systems, cloud platforms and AI agents.',
+    sources: ['resume', 'gh-profile'],
+  },
+  {
+    id: 'education',
+    keys: ['college', 'university', 'degree', 'b.tech', 'btech', 'lnmiit', 'education', 'student', 'graduat*', 'which year', 'what year', 'his branch', 'his major', 'what does he study', 'where does he study', 'where did he study', 'is he studying', 'studies at', 'batch', 'cgpa', 'gpa'],
+    answer:
+      'He is studying for a B.Tech in Electronics and Communication Engineering at The LNM Institute of Information Technology (LNMIIT), Jaipur. The course runs from August 2024 to June 2028, so he graduates in 2028. Grades are not published on this site.',
+    sources: ['resume'],
+    action: { type: 'goto', target: 'experience' },
+  },
+  {
+    id: 'location',
+    keys: ['where is he', 'where does he live', 'based in', 'location', 'which city', 'which country', 'hometown', 'where is ayush', 'from india', 'relocate'],
+    answer:
+      'He is based in Jaipur, India, where he studies at LNMIIT. His Finn internship was in Bengaluru, and his UNSW Sydney research internship was remote.',
+    sources: ['resume'],
+  },
+  {
+    id: 'github',
+    keys: ['github', 'repositories', 'repos', 'source code', 'open source'],
+    answer:
+      'His GitHub is github.com/Ayush-Bansal08. The SAKA, Helios, DockHealer and PollForge repositories are public, and each project card here links straight to its code.',
+    sources: ['gh-profile', 'saka-repo', 'helios-repo', 'dockhealer-repo', 'pollforge-repo'],
+    action: { type: 'goto', target: 'work' },
+  },
+  {
+    id: 'experience',
+    keys: ['experience', 'internship', 'internships', 'interned', 'worked at', 'where has he worked', 'work history', 'companies', 'jobs', 'job'],
+    answer:
+      'Two internships in 2026. At Finn (Airforge Tech), May–July in Bengaluru, he merged 25+ pull requests across 5+ production services, including AI voice agents, APIs and deployment infrastructure. At UNSW Sydney, May–August (remote), he was an AI/ML research intern on the SOM-Gold paper, which is under review.',
+    sources: ['resume'],
+    action: { type: 'goto', target: 'experience' },
+  },
+  {
+    id: 'projects',
+    keys: ['projects', 'what has he built', 'what did he build', 'what has he made', 'how many projects', 'his work'],
+    answer:
+      'Five featured projects: SAKA (an AI DeFi agent, 2nd place at ETHGlobal Mumbai), Helios (a Kubernetes platform with self-checking releases), DockHealer (an AI Dockerfile generator that verifies its own output), PollForge (a five-service voting app on Azure Kubernetes) and SOM-Gold (ML research at UNSW Sydney).',
+    sources: ['resume', 'gh-profile'],
+    action: { type: 'goto', target: 'work' },
+  },
+  {
+    id: 'awards',
+    keys: ['awards', 'achievements', 'what has he won', 'hackathons', 'accomplishments', 'recognition'],
+    answer:
+      'Two hackathon wins: 2nd place in the 0G track at ETHGlobal Mumbai 2026 ($1,500) for SAKA, and 1st place in the Viral Consumer Apps track at LNMHacks 8.0 ($600 partner prize, 500+ participants). He is also second author on a research paper from UNSW Sydney, now under review.',
+    sources: ['saka-showcase', 'resume', 'som-citation'],
+    action: { type: 'goto', target: 'achievements' },
+  },
+  {
+    id: 'phone',
+    keys: ['phone', 'mobile number', 'call him', 'whatsapp', 'contact number'],
+    answer: 'Email is the quickest way to reach him: ab262133@gmail.com. His full contact details are on the résumé PDF, which you can download from the résumé page.',
+    sources: ['resume'],
+    action: { type: 'goto', target: 'contact' },
+  },
+  {
+    id: 'personal',
+    keys: ['how old', 'his age', 'birthday', 'born', 'hobbies', 'free time', 'married', 'girlfriend', 'religion', 'salary'],
+    answer:
+      'That is personal and he hasn’t shared it on this site, so I won’t guess. I can tell you about his projects, internships, studies or hackathon wins.',
+    sources: ['resume'],
+  },
+  {
+    id: 'strengths',
+    keys: ['why should we hire', 'why hire', 'strengths', 'strength', 'good engineer', 'is he good', 'is he any good', 'what makes him', 'stand out', 'unique about', 'impressive about him', 'why him'],
+    answer:
+      'Judge the evidence, not my opinion: he builds systems that check their own work. SAKA wraps an AI that moves money in deterministic safety checks (2nd at ETHGlobal Mumbai, 600+ tests). Helios rolls releases back on live metrics. At Finn he shipped to production (25+ merged PRs), and at UNSW he found the bug that took recall from 0% to 76.6%.',
+    sources: ['saka-showcase', 'saka-repo', 'helios-repo', 'resume'],
+    action: { type: 'goto', target: 'work' },
+  },
+  {
+    id: 'team',
+    keys: ['team', 'teamwork', 'collaborat*', 'work with others', 'solo'],
+    answer:
+      'Both. SAKA was a team hackathon entry (all 41 public commits are his), Finn meant shipping inside a production team where his 25+ pull requests were reviewed and merged, and SOM-Gold is a four-author research paper. Helios, DockHealer and PollForge are solo projects.',
+    sources: ['saka-repo', 'resume', 'som-citation'],
+  },
+  {
+    id: 'resume',
+    keys: ['resume', 'résumé', 'cv', 'curriculum vitae'],
+    answer: 'His résumé is on the résumé page (in the navigation), with his original PDF to download.',
+    sources: ['resume'],
+  },
+  {
+    id: 'helios-canary',
+    keys: ['canary', 'canary release', 'canary deployment', 'progressive delivery'],
+    answer:
+      'A canary release sends a new version to a small share of users first and only rolls it out further if it behaves. In Helios each release goes to 25%, then 50%, 75% and 100%, and only advances while the live success rate stays at or above 95%; otherwise it rolls back by itself.',
+    sources: ['helios-repo'],
+    action: { type: 'goto', target: 'helios' },
+  },
+  {
+    id: 'helios-gitops',
+    keys: ['gitops', 'argocd', 'argo cd'],
+    answer:
+      'GitOps means the Git repository is the single source of truth: a tool (ArgoCD in Helios) keeps the cluster matching what is in Git and undoes manual drift. In Helios a git push is the whole deployment process: zero manual steps.',
+    sources: ['helios-repo'],
+    action: { type: 'goto', target: 'helios' },
+  },
+  {
+    id: 'helios-operator',
+    keys: ['operator', 'kubebuilder', 'custom resource', 'crd'],
+    answer:
+      'A Kubernetes operator is a small program that teaches the cluster a new kind of object. Ayush wrote one in Go for Helios: apply a 7-line PreviewEnvironment resource and it creates a private copy of the app for that pull request, then cleans everything up when it is deleted.',
+    sources: ['helios-repo', 'helios-operator'],
+    action: { type: 'goto', target: 'helios' },
+  },
+  {
+    id: 'saka-mcp',
+    keys: ['mcp', 'model context protocol', 'mcp server'],
+    answer:
+      'MCP (Model Context Protocol) is a standard way to give an AI model tools it can call. For SAKA he built a 16-tool Uniswap MCP server that can build transactions but never sign or send them, and a build test fails if anyone adds signing code.',
+    sources: ['saka-repo', 'saka-mcp'],
+    action: { type: 'goto', target: 'saka' },
+  },
+  {
+    id: 'saka-autopilot',
+    keys: ['autopilot', 'while i sleep', 'while you sleep', 'unprompted', 'on its own', 'telegram', 'automatically trade', 'detectors'],
+    answer:
+      'SAKA also works unprompted: nine detectors check every funded wallet each minute and, when something needs attention, propose an action you can approve, change or skip, in the app or on Telegram. Every proposal still goes through the same safety pipeline.',
+    sources: ['saka-repo', 'saka-showcase'],
+    action: { type: 'goto', target: 'saka' },
+  },
+  {
+    id: 'saka-ethglobal',
     keys: ['ethglobal', 'what did he build at', 'hackathon win', 'prize', 'mumbai'],
     answer:
       'At ETHGlobal Mumbai 2026 his team built SAKA, an AI DeFi agent that plans on 0G and trades on Uniswap through a safety pipeline. It won 2nd place in the 0G "Build with 0G Private Computer" track ($1,500).',
@@ -166,7 +296,7 @@ export const FAQ: Faq[] = [
     sources: ['resume', 'gh-profile'],
   },
   {
-    id: 'unsw',
+    id: 'som-gold-unsw',
     keys: ['unsw', 'research', 'sydney', 'som', 'self-organizing', 'paper'],
     answer:
       'At UNSW Sydney (May–Aug 2026, remote) he worked with Dr. Rohitash Chandra on SOM-Gold, using self-organizing maps and autoencoders on hyperspectral satellite data for gold exploration. He fixed a training bug that raised mineral recall from 0% to 76.6%, corrected 8 pipeline bugs, and built the evaluation framework. He is second author on the paper, which is under review.',
@@ -175,7 +305,7 @@ export const FAQ: Faq[] = [
   },
   {
     id: 'backend',
-    keys: ['backend', 'finn', 'airforge', 'production', 'apis', 'industry experience'],
+    keys: ['backend', 'finn', 'airforge', 'production', 'apis', 'industry experience', 'pull request*', 'prs', 'merged', 'voice agent*'],
     answer:
       'At Finn (Airforge Tech, May–Jul 2026) he merged 25+ PRs across 5+ production services: AI voice agents, backend APIs, authentication, WhatsApp automation and deployment, with twice-weekly releases using Docker, Kubernetes and Nginx. In projects, SAKA has a Fastify API with a BullMQ worker, and PollForge is a five-service event-driven system.',
     sources: ['resume', 'saka-repo', 'pollforge-repo'],
@@ -207,16 +337,16 @@ export const FAQ: Faq[] = [
   },
   {
     id: 'contact',
-    keys: ['contact', 'email', 'hire', 'reach', 'linkedin', 'resume', 'cv'],
+    keys: ['contact', 'email', 'reach him', 'reach out', 'linkedin', 'get in touch'],
     answer: 'Email ab262133@gmail.com, or find him on LinkedIn and GitHub. The résumé is linked in the navigation.',
     sources: ['gh-profile', 'linkedin'],
     action: { type: 'goto', target: 'contact' },
   },
   {
     id: 'available',
-    keys: ['is he available', 'available', 'open to', 'looking for', 'hire him', 'hiring'],
+    keys: ['is he available', 'available', 'availability', 'open to', 'looking for', 'hire him', 'hiring', 'full time', 'full-time', 'job offer', 'notice period'],
     answer:
-      'Yes. Ayush is looking for software engineering internships in backend, cloud/platform, AI/ML and AI agents. He graduates from LNMIIT in 2028. The fastest route is email: ab262133@gmail.com.',
+      'He is looking for software engineering internships in backend, cloud/platform, AI/ML and AI agents, and graduates from LNMIIT in 2028. The fastest route is email: ab262133@gmail.com.',
     sources: ['gh-profile', 'resume'],
     action: { type: 'goto', target: 'contact' },
   },

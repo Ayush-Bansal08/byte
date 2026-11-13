@@ -43,11 +43,11 @@ describe('offline answers', () => {
   });
   it('explains the viewed project for "how does this work"', () => {
     const r = offlineAnswer(req('How does this work?', 'dockhealer'));
-    expect(r.answer).toMatch(/Validate|validator/i);
+    expect(r.answer).toMatch(/check the file|build it for real|validat/i);
     expect(r.citations.map((c) => c.id)).toContain('dockhealer-repo');
   });
   it('answers the quick-ask chips on a case study', () => {
-    expect(offlineAnswer(req('What was his role?', 'helios')).answer).toMatch(/Solo project/);
+    expect(offlineAnswer(req('What was his role?', 'helios')).answer).toMatch(/solo project/i);
     expect(offlineAnswer(req('What was hardest?', 'helios')).answer).toMatch(/hardest call/i);
     expect(offlineAnswer(req('Is he available?')).answer).toMatch(/internships/);
     expect(offlineAnswer(req('How was this site built?')).answer).toMatch(/Next\.js/);
@@ -243,5 +243,26 @@ describe('instant and complete', () => {
     const prompt = buildUserPrompt(q, retrieve(q.question));
     for (const name of ['SAKA', 'Helios', 'DockHealer', 'PollForge', 'SOM-Gold', 'Finn', 'UNSW']) expect(prompt).toContain(name);
     expect(prompt.indexOf('Helios')).toBeLessThan(prompt.indexOf('PollForge'));
+  });
+});
+
+describe('basic questions always get a straight answer', () => {
+  const ask = (question: string) => offlineAnswer(AskRequest.parse({ question, context: { path: '/' } }));
+  const cases: [string, RegExp][] = [
+    ['what is his name', /Ayush Bansal/],
+    ["What's his name?", /Ayush Bansal/],
+    ['Which college does he go to?', /LNMIIT/],
+    ['When does he graduate?', /2028/],
+    ['Where is he based?', /Jaipur/],
+    ['Where has he worked?', /Finn/],
+    ['What are his projects?', /SAKA.*Helios.*DockHealer.*PollForge.*SOM-Gold/],
+    ['What awards has he won?', /ETHGlobal.*LNMHacks/],
+    ['What is his GitHub?', /Ayush-Bansal08/],
+    ['How old is he?', /hasn’t shared/],
+  ];
+  for (const [q, re] of cases) it(q, () => expect(ask(q).answer).toMatch(re));
+  it('trigger words inside other words do not misfire', () => {
+    expect(ask('Show me the SAKA case study page').answer).not.toMatch(/B\.Tech|personal/);
+    expect(ask('Is there a live demo of SAKA?').answer).not.toMatch(/based in Jaipur/);
   });
 });

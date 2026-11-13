@@ -63,7 +63,7 @@ export const PROJECTS: Project[] = [
     slug: 'saka',
     name: 'SAKA',
     kicker: 'Autonomous AI agent · DeFi',
-    tagline: 'Tell an AI “swap $5 of ETH for USDC” and it does it, but only after safety checks it can’t talk its way past.',
+    tagline: 'Tell an AI “swap $5 of ETH for USDC” and it does it, after safety checks it can’t talk its way past. Go to sleep, and it keeps watching your wallet, pinging you on Telegram when it spots a move worth making.',
     badge: '2nd place · 0G Private Computer track · ETHGlobal Mumbai 2026',
     period: 'Nov 5–7, 2026',
     kind: 'Hackathon team project',
@@ -88,7 +88,7 @@ export const PROJECTS: Project[] = [
     },
     card: {
       problem: 'Give an AI your wallet and one bad guess, or one sneaky prompt, can drain it. Most trading bots won’t even tell you why they acted.',
-      solution: 'The AI may only suggest. Code rehearses every trade first, a second AI hunts for danger, and your own limits decide. Risky trades are refused, with the reason on screen.',
+      solution: 'The AI may only suggest. Code rehearses every trade first, a second AI hunts for danger, and your own limits decide. Unprompted, nine watchers scan every wallet each minute and propose a move you can approve, change or skip.',
       contribution: 'All 41 changes in the public code are mine: wiring up the AI models, launching it on Azure and designing the app.',
       outcome: 'A live demo you can try right now, guarded by more than 600 automated tests.',
     },
