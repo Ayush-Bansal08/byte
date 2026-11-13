@@ -253,7 +253,7 @@ describe('basic questions always get a straight answer', () => {
     ["What's his name?", /Ayush Bansal/],
     ['Which college does he go to?', /LNMIIT/],
     ['When does he graduate?', /2028/],
-    ['Where is he based?', /Jaipur/],
+    ['Where is he based?', /Gurgaon/],
     ['Where has he worked?', /Finn/],
     ['What are his projects?', /SAKA.*Helios.*DockHealer.*PollForge.*SOM-Gold/],
     ['What awards has he won?', /ETHGlobal.*LNMHacks/],
@@ -263,7 +263,7 @@ describe('basic questions always get a straight answer', () => {
   for (const [q, re] of cases) it(q, () => expect(ask(q).answer).toMatch(re));
   it('trigger words inside other words do not misfire', () => {
     expect(ask('Show me the SAKA case study page').answer).not.toMatch(/B\.Tech|personal/);
-    expect(ask('Is there a live demo of SAKA?').answer).not.toMatch(/based in Jaipur/);
+    expect(ask('Is there a live demo of SAKA?').answer).not.toMatch(/based in Gurgaon/);
   });
 });
 

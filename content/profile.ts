@@ -10,7 +10,7 @@ export const PROFILE = {
   /** Factual one-paragraph bio for search previews, llms.txt and Ask Byte (not shown on the page). */
   summary:
     'Backend services, cloud platforms and AI agents. I placed 2nd in the 0G track at ETHGlobal Mumbai 2026 with SAKA, an autonomous DeFi agent, shipped production APIs and AI voice-agent features at Finn, and co-authored ML research at UNSW Sydney.',
-  location: 'Jaipur, India',
+  location: 'Gurgaon, India',
   education: {
     school: 'The LNM Institute of Information Technology (LNMIIT)',
     degree: 'B.Tech, Electronics and Communication Engineering',

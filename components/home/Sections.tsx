@@ -120,7 +120,7 @@ export function Hero() {
               <dt className="text-faint">
                 <span className="text-accent">$</span> whoami
               </dt>
-              <dd className="text-text">ayush bansal · jaipur, india</dd>
+              <dd className="text-text">ayush bansal · gurgaon, india</dd>
             </div>
             <div className="term-line" style={{ animationDelay: '450ms' }}>
               <dt className="text-faint">

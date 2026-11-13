@@ -154,9 +154,9 @@ export const FAQ: Faq[] = [
   },
   {
     id: 'location',
-    keys: ['where is he', 'where does he live', 'based in', 'location', 'which city', 'which country', 'hometown', 'where is ayush', 'from india', 'relocate'],
+    keys: ['where is he', 'where does he live', 'based in', 'location', 'which city', 'which country', 'hometown', 'where is ayush', 'from india', 'relocate', 'gurgaon', 'gurugram', 'delhi', 'ncr'],
     answer:
-      'He is based in Jaipur, India, where he studies at LNMIIT. His Finn internship was in Bengaluru, and his UNSW Sydney research internship was remote.',
+      'He is based in Gurgaon (Gurugram), India, and studies at LNMIIT in Jaipur. His Finn internship was in Bengaluru, and his UNSW Sydney research internship was remote.',
     sources: ['resume'],
   },
   {
