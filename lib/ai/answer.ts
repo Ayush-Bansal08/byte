@@ -117,6 +117,62 @@ export function offlineAnswer(req: AskRequest, hits = retrieve(req.question, { p
   };
 }
 
+/**
+ * Circuit breaker: when the live model fails, answer from notes straight away for a while instead of
+ * making every visitor wait for the same failure. A bad key or missing model rests longer than a blip.
+ */
+const REST_MS: Record<string, number> = { auth: 30 * 60_000, 'model-not-found': 30 * 60_000, quota: 10 * 60_000 };
+const health = { downUntil: 0, reason: '', checkedAt: 0 };
+
+export function modelStatus(): { live: boolean; reason?: string } {
+  return Date.now() < health.downUntil ? { live: false, reason: health.reason } : { live: true };
+}
+function markDown(reason: string) {
+  health.downUntil = Date.now() + (REST_MS[reason] ?? 2 * 60_000);
+  health.reason = reason;
+}
+function markUp() {
+  health.downUntil = 0;
+  health.reason = '';
+}
+
+/** Verify the key without spending quota (cached for 10 minutes). Used by GET /api/ask. */
+export async function checkProvider(provider: { check?: () => Promise<void> } | null): Promise<{ live: boolean; reason?: string }> {
+  if (!provider) return { live: false, reason: 'no-key' };
+  const status = modelStatus();
+  if (!status.live || !provider.check || Date.now() - health.checkedAt < 10 * 60_000) return status;
+  health.checkedAt = Date.now();
+  try {
+    await provider.check();
+    markUp();
+  } catch (err) {
+    const reason = failureReason(err, false);
+    console.error(`[ask] provider check failed (${reason}):`, err instanceof Error ? err.message.slice(0, 300) : '');
+    markDown(reason);
+  }
+  return modelStatus();
+}
+
+/** Test hook: forget the breaker state. */
+export function resetModelHealth() {
+  markUp();
+  health.checkedAt = 0;
+}
+
+/** A short, secret-free label for why the model path failed. */
+function failureReason(err: unknown, aborted: boolean): string {
+  if (aborted) return 'timeout';
+  const status = (err as { status?: number })?.status;
+  const msg = err instanceof Error ? err.message : '';
+  if (status === 401 || status === 403 || /API key|permission/i.test(msg)) return 'auth';
+  if (status === 404 || /not found|is not supported/i.test(msg)) return 'model-not-found';
+  if (status === 429 || /quota|rate/i.test(msg)) return 'quota';
+  if (status === 400) return 'bad-request';
+  if (msg === 'empty') return 'empty';
+  if (msg === 'schema' || err instanceof SyntaxError) return 'bad-output';
+  return status ? `http-${status}` : 'error';
+}
+
 export async function answerQuestion(
   req: AskRequest,
   provider: ProviderLike | null,
@@ -129,14 +185,22 @@ export async function answerQuestion(
     if (provider && opts.allowModel === false) res.notice = 'The live AI is resting (daily limit reached), so this answer comes from curated notes.';
     return res;
   }
+  // the live model failed recently: don't make this visitor wait for the same failure
+  const status = modelStatus();
+  if (!status.live) {
+    const res = offlineAnswer(req, hits);
+    res.fallbackReason = status.reason;
+    return res;
+  }
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 14_000);
+  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 9_000);
   try {
     const raw = await provider.generate({ system: SYSTEM_PROMPT, user: buildUserPrompt(req, hits), signal: controller.signal });
     if (!raw) throw new Error('empty');
     const parsed = ModelOutput.safeParse(JSON.parse(raw));
     if (!parsed.success) throw new Error('schema');
     const out = parsed.data;
+    markUp();
     // Citations must come from evidence actually provided for this question.
     const allowed = new Set<SourceId>(hits.flatMap((h) => h.chunk.sources));
     const cited = out.citations.filter((id): id is SourceId => isSourceId(id) && allowed.has(id));
@@ -148,9 +212,12 @@ export async function answerQuestion(
       mode: 'ai',
       provider: provider.name,
     };
-  } catch {
+  } catch (err) {
+    const reason = failureReason(err, controller.signal.aborted);
+    console.error(`[ask] ${provider.name} failed (${reason}):`, err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300));
+    markDown(reason);
     const res = offlineAnswer(req, hits);
-    res.notice = 'The live AI did not respond in time, so this answer comes from curated notes.';
+    res.fallbackReason = reason;
     return res;
   } finally {
     clearTimeout(timer);

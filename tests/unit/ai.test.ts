@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { answerQuestion, buildUserPrompt, offlineAnswer, parseAction, toCitations, type ProviderLike } from '@/lib/ai/answer';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { answerQuestion, buildUserPrompt, checkProvider, modelStatus, offlineAnswer, parseAction, resetModelHealth, toCitations, type ProviderLike } from '@/lib/ai/answer';
+
+// the live-model circuit breaker is module state: start every test with a healthy model
+beforeEach(() => resetModelHealth());
 import { getProvider } from '@/lib/ai/providers';
 import { RateLimiter } from '@/lib/ai/ratelimit';
 import { retrieve, resolveQuery } from '@/lib/ai/retrieve';
@@ -99,7 +102,7 @@ describe('model path', () => {
   it('falls back to curated notes when the model returns invalid JSON', async () => {
     const r = await answerQuestion(req('Does he know Kubernetes?'), fake('not json'));
     expect(r.mode).toBe('offline');
-    expect(r.notice).toMatch(/curated notes/);
+    expect(r.fallbackReason).toBe('bad-output');
   });
 
   it('falls back when the model output breaks the schema (e.g. a non-whitelisted action)', async () => {
@@ -162,5 +165,55 @@ describe('RateLimiter', () => {
     expect(rl.takeDaily()).toBe(true);
     expect(rl.takeDaily()).toBe(true);
     expect(rl.takeDaily()).toBe(false);
+  });
+});
+
+describe('model failures are explained', () => {
+  const req = AskRequest.parse({ question: 'What is SAKA?', context: { path: '/' } });
+  const failing = (err: unknown): ProviderLike => ({ name: 'gemini', generate: async () => Promise.reject(err) });
+  it('labels a missing model, a quota error and bad output, and still answers from notes', async () => {
+    const notFound = Object.assign(new Error('models/x is not found'), { status: 404 });
+    const quota = Object.assign(new Error('Resource exhausted: quota'), { status: 429 });
+    for (const [err, reason] of [[notFound, 'model-not-found'], [quota, 'quota'], [new SyntaxError('bad json'), 'bad-output']] as const) {
+      resetModelHealth();
+      const res = await answerQuestion(req, failing(err));
+      expect(res.mode).toBe('offline');
+      expect(res.fallbackReason).toBe(reason);
+      expect(res.answer.length).toBeGreaterThan(20);
+    }
+  });
+});
+
+describe('online when the key works, offline when it does not', () => {
+  const req = AskRequest.parse({ question: 'What is SAKA?', context: { path: '/' } });
+  const good: ProviderLike = { name: 'gemini', generate: async () => JSON.stringify({ answer: 'SAKA is an AI DeFi agent.', citations: ['saka-repo'], found: true, action: 'none' }) };
+  it('after a failure, answers instantly from notes without calling the model again', async () => {
+    let calls = 0;
+    const bad: ProviderLike = { name: 'gemini', generate: async () => { calls++; throw Object.assign(new Error('API key not valid'), { status: 400 }); } };
+    await answerQuestion(req, bad);
+    expect(modelStatus().live).toBe(false);
+    const t = Date.now();
+    const res = await answerQuestion(req, bad);
+    expect(calls).toBe(1);
+    expect(res.mode).toBe('offline');
+    expect(Date.now() - t).toBeLessThan(50);
+  });
+  it('a working model answers live and clears the breaker', async () => {
+    const res = await answerQuestion(req, good);
+    expect(res.mode).toBe('ai');
+    expect(modelStatus().live).toBe(true);
+  });
+  it('a slow model is cut off quickly and the visitor still gets an answer', async () => {
+    const slow: ProviderLike = { name: 'gemini', generate: ({ signal }) => new Promise((_, rej) => signal.addEventListener('abort', () => rej(new Error('aborted')))) };
+    const t = Date.now();
+    const res = await answerQuestion(req, slow, { timeoutMs: 100 });
+    expect(Date.now() - t).toBeLessThan(500);
+    expect(res.mode).toBe('offline');
+    expect(res.fallbackReason).toBe('timeout');
+  });
+  it('the status check reports offline for a key that does not work', async () => {
+    const status = await checkProvider({ check: async () => Promise.reject(Object.assign(new Error('API key not valid'), { status: 403 })) });
+    expect(status).toEqual({ live: false, reason: 'auth' });
+    expect(await checkProvider(null)).toEqual({ live: false, reason: 'no-key' });
   });
 });

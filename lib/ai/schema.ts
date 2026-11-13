@@ -67,4 +67,6 @@ export type AskResponse = {
   mode: 'ai' | 'offline';
   provider?: 'anthropic' | 'gemini';
   notice?: string;
+  /** why the live model was skipped, e.g. 'model-not-found', 'quota', 'timeout' (no secrets) */
+  fallbackReason?: string;
 };

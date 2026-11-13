@@ -45,7 +45,7 @@ describe('/api/ask', () => {
 
   it('reports the mode on GET', async () => {
     const { GET } = await import('@/app/api/ask/route');
-    const body = await GET().json();
+    const body = await (await GET()).json();
     expect(body).toEqual({ mode: 'offline', provider: null });
   });
 });

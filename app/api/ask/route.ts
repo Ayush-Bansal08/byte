@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createHash } from 'node:crypto';
-import { answerQuestion } from '@/lib/ai/answer';
+import { answerQuestion, checkProvider } from '@/lib/ai/answer';
 import { getProvider } from '@/lib/ai/providers';
 import { RateLimiter } from '@/lib/ai/ratelimit';
 import { AskRequest } from '@/lib/ai/schema';
@@ -52,7 +52,9 @@ export async function POST(req: NextRequest) {
   return json(result);
 }
 
-export function GET() {
+/** What visitors will get right now: 'ai' only if the key actually works (verified, cached 10 min). */
+export async function GET() {
   const provider = getProvider();
-  return json({ mode: provider ? 'ai' : 'offline', provider: provider?.name ?? null });
+  const status = await checkProvider(provider);
+  return json({ mode: status.live ? 'ai' : 'offline', provider: provider?.name ?? null, ...(status.reason && provider ? { reason: status.reason } : {}) });
 }
