@@ -48,13 +48,6 @@ function Block({ n, title, id, stage, children }: { n: number; title: string; id
   );
 }
 
-/** Byte's line for a block: the first sentence, kept short. */
-function line(text: string | undefined, max = 120) {
-  if (!text) return undefined;
-  const first = (text.match(/[^.!?]+[.!?]/)?.[0] ?? text).trim();
-  return first.length > max ? `${first.slice(0, max - 1).replace(/[\s,;:]+\S*$/, '')}…` : first;
-}
-
 const Ext = () => (
   <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
     <path d="M4 2h6v6M10 2L3 9" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
@@ -71,7 +64,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
   const num = () => ++n;
 
   return (
-    <article className="container-page pb-20 pt-10 sm:pt-14">
+    <article className="container-page pb-20 pt-10 sm:pt-14" style={{ '--tint': p.tint } as React.CSSProperties}>
       <nav aria-label="Breadcrumb" className="mb-8 font-mono text-[0.78rem] text-faint">
         <TransitionLink href="/#work" label="Home" className="link text-muted">
           Work
@@ -79,13 +72,16 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
         / <span aria-current="page">{p.name}</span>
       </nav>
 
-      <header className="pb-10">
+      <header className="relative isolate pb-10">
+        <div className="hero-sky" aria-hidden="true">
+          <div className="hero-grid" />
+        </div>
         <div className="flex items-end gap-4">
           <div className="min-w-0">
-            <p className="kicker">{p.kicker}</p>
+            <p className="kicker tint-kicker">{p.kicker}</p>
             <h1 className="mt-3 text-5xl font-semibold tracking-[-0.035em] sm:text-6xl">{p.name}</h1>
           </div>
-          <CharacterStage id={p.slug} behavior="greet" costume={p.costume} mood={p.badge ? 'star' : 'happy'} message={p.byteLine} className="h-[128px] min-w-[84px] flex-1" />
+          <CharacterStage id={p.slug} behavior="greet" costume={p.costume} mood={p.badge ? 'star' : 'happy'} message={p.byte.intro} className="h-[128px] min-w-[84px] flex-1" />
         </div>
         {p.badge && (
           <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/[0.07] px-3 py-1 text-[0.85rem] text-gold">
@@ -127,22 +123,22 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
         </div>
       </header>
 
-      <Block n={num()} title="Overview" id="overview" stage={{ behavior: 'point', costume: p.costume, mood: 'happy', message: line(p.overview[0]) }}>
+      <Block n={num()} title="Overview" id="overview" stage={{ behavior: 'point', costume: p.costume, mood: 'happy', message: p.byte.overview }}>
         {p.overview.map((t) => (
           <p key={t}>{t}</p>
         ))}
       </Block>
-      <Block n={num()} title="The problem" id="problem" stage={{ behavior: 'think', costume: p.costume, mood: 'focused', message: line(p.problem[0]) }}>
+      <Block n={num()} title="The problem" id="problem" stage={{ behavior: 'think', costume: p.costume, mood: 'focused', message: p.byte.problem }}>
         {p.problem.map((t) => (
           <p key={t}>{t}</p>
         ))}
       </Block>
-      <Block n={num()} title="Why it matters" id="why" stage={{ behavior: 'point', costume: p.costume, mood: 'wink', message: line(p.whyItMatters[0]) }}>
+      <Block n={num()} title="Why it matters" id="why" stage={{ behavior: 'point', costume: p.costume, mood: 'wink', message: p.byte.why }}>
         {p.whyItMatters.map((t) => (
           <p key={t}>{t}</p>
         ))}
       </Block>
-      <Block n={num()} title="My role" id="role" stage={{ behavior: 'wave', costume: p.costume, mood: 'happy', message: line(p.role[0]) }}>
+      <Block n={num()} title="My role" id="role" stage={{ behavior: 'wave', costume: p.costume, mood: 'happy', message: p.byte.role }}>
         {p.role.map((t) => (
           <p key={t} className="text-text">
             {t}
@@ -152,11 +148,11 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
       <Block n={num()} title="Architecture" id="architecture">
         <div className="flex items-end gap-4">
           <h3 className="min-w-0 text-lg font-semibold text-text">{p.architecture.title}</h3>
-          <CharacterStage id={`${p.slug}-arch`} behavior="inspect" costume={p.costume} mood="focused" scene={`${p.slug}-arch`} lookAt={`${p.slug}-arch-flow`} className="h-[112px] min-w-[80px] flex-1" />
+          <CharacterStage id={`${p.slug}-arch`} behavior="inspect" costume={p.costume} mood="focused" message={p.byte.arch} scene={`${p.slug}-arch`} lookAt={`${p.slug}-arch-flow`} className="h-[112px] min-w-[80px] flex-1" />
         </div>
         <SceneFlow flow={p.architecture} scene={`${p.slug}-arch`} id={`${p.slug}-arch-flow`} />
       </Block>
-      <Block n={num()} title="Technical implementation" id="implementation" stage={{ behavior: 'inspect', costume: p.costume, mood: 'focused', message: `Under the hood: ${p.implementation.map((i) => i.heading).slice(0, 2).join(', ')}.` }}>
+      <Block n={num()} title="Technical implementation" id="implementation" stage={{ behavior: 'inspect', costume: p.costume, mood: 'focused', message: p.byte.implementation }}>
         {p.implementation.map((s) => (
           <div key={s.heading}>
             <h3 className="font-semibold text-text">{s.heading}</h3>
@@ -188,7 +184,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
           </div>
         )}
       </Block>
-      <Block n={num()} title="Difficult decisions" id="decisions" stage={{ behavior: 'think', costume: p.costume, mood: 'focused', message: p.decisions[0] ? `Hardest call: ${p.decisions[0].decision.toLowerCase()}.` : undefined }}>
+      <Block n={num()} title="Difficult decisions" id="decisions" stage={{ behavior: 'think', costume: p.costume, mood: 'focused', message: p.byte.decisions }}>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] border-collapse text-left text-[0.92rem]">
             <thead>
@@ -213,7 +209,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
         </div>
       </Block>
       {p.challenges.length > 0 && (
-        <Block n={num()} title="Challenges and fixes" id="challenges" stage={{ behavior: 'think', costume: p.costume, mood: 'surprised', message: p.challenges[0] ? `Things broke. First up: ${p.challenges[0].issue}.` : undefined }}>
+        <Block n={num()} title="Challenges and fixes" id="challenges" stage={{ behavior: 'think', costume: p.costume, mood: 'surprised', message: p.byte.challenges }}>
           <ul className="space-y-4">
             {p.challenges.map((c) => (
               <li key={c.issue} className="rounded-xl border border-line p-4">
@@ -231,7 +227,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
           </ul>
         </Block>
       )}
-      <Block n={num()} title="Testing and reliability" id="testing" stage={{ behavior: 'inspect', costume: 'glasses', mood: 'focused', message: line(p.testing[0], 100) }}>
+      <Block n={num()} title="Testing and reliability" id="testing" stage={{ behavior: 'inspect', costume: 'glasses', mood: 'focused', message: p.byte.testing }}>
         <ul className="space-y-2">
           {p.testing.map((t) => (
             <li key={t} className="flex gap-3">
@@ -244,7 +240,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
       <Block n={num()} title="Measurable outcomes" id="outcomes">
         <div className="flex items-end gap-4">
           <p className="min-w-0 text-[0.92rem]">Verified figures only.</p>
-          <CharacterStage id={`${p.slug}-outcomes`} behavior={p.badge ? 'celebrate' : 'point'} costume={p.badge ? 'crown' : p.costume} mood={p.badge ? 'star' : 'happy'} message={p.outcomes[0] ? `The headline: ${p.outcomes[0].metric} ${p.outcomes[0].label}.` : undefined} lookAt={`${p.slug}-outcome-grid`} className="h-[112px] min-w-[80px] flex-1" />
+          <CharacterStage id={`${p.slug}-outcomes`} behavior={p.badge ? 'celebrate' : 'point'} costume={p.badge ? 'crown' : p.costume} mood={p.badge ? 'star' : 'happy'} message={p.byte.outcomes} lookAt={`${p.slug}-outcome-grid`} className="h-[112px] min-w-[80px] flex-1" />
         </div>
         <ul id={`${p.slug}-outcome-grid`} className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
           {p.outcomes.map((o) => (
@@ -282,7 +278,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
           <p>No public demo. The repository has run instructions.</p>
         )}
       </Block>
-      <Block n={num()} title="Source code and evidence" id="source" stage={{ behavior: 'point', costume: 'detective', mood: 'wink', message: 'Every claim on this page links to real evidence.' }}>
+      <Block n={num()} title="Source code and evidence" id="source" stage={{ behavior: 'point', costume: 'detective', mood: 'wink', message: p.byte.source }}>
         <ul className="space-y-2">
           {p.sources
             .map((id) => SOURCE_BY_ID[id])
@@ -296,7 +292,7 @@ export default async function CaseStudy({ params }: { params: Promise<{ slug: st
             ))}
         </ul>
       </Block>
-      <Block n={num()} title="Takeaways" id="takeaways" stage={{ behavior: 'wave', costume: p.costume, mood: 'star', message: p.takeaways[0] }}>
+      <Block n={num()} title="Takeaways" id="takeaways" stage={{ behavior: 'wave', costume: p.costume, mood: 'star', message: p.byte.takeaways }}>
         <ul className="space-y-2">
           {p.takeaways.map((t) => (
             <li key={t} className="flex gap-3 text-text">

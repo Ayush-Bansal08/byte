@@ -17,6 +17,8 @@ export const SOURCES = [
   { id: 'saka-showcase', title: 'SAKA on ETHGlobal Showcase', url: 'https://ethglobal.com/showcase/saka-defi-ai-agent-gbb53', kind: 'showcase' },
   { id: 'saka-repo', title: 'SAKA repository', url: 'https://github.com/Ayush-Bansal08/SAKA', kind: 'repo' },
   { id: 'saka-demo', title: 'SAKA live demo', url: 'https://saka-rust.vercel.app', kind: 'demo' },
+  { id: 'saka-video', title: 'SAKA demo video', url: 'https://drive.google.com/file/d/1f1BYpQFaRfzk45dL3RWnMTBC9i1DfED1/view', kind: 'video' },
+  { id: 'saka-x', title: '0G Labs announcement on X', url: 'https://x.com/0G_labs/status/2119056021511627221', kind: 'showcase' },
   { id: 'saka-mcp', title: 'uniswap-agent-mcp plugin (fork of Uniswap/uniswap-ai)', url: 'https://github.com/Ayush-Bansal08/uniswap-ai/tree/feat/uniswap-agent-mcp/packages/plugins/uniswap-agent-mcp', kind: 'repo' },
   { id: 'helios-repo', title: 'Helios repository (k8s-project)', url: 'https://github.com/Ayush-Bansal08/k8s-project', kind: 'repo' },
   { id: 'helios-operator', title: 'Helios PreviewEnvironment controller (Go)', url: 'https://github.com/Ayush-Bansal08/k8s-project/blob/main/operator/internal/controller/previewenvironment_controller.go', kind: 'repo' },

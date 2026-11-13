@@ -45,6 +45,8 @@ Examples of rules: no waving mid-air (`JUMPING → LANDING | HIDDEN | DRAGGED` o
 - **Side-by-side cards:** after presenting one card, Byte hops to its unvisited neighbour.
 - **Off-screen trips:** Byte re-enters from the viewport edge nearest its old position (drops from the top or leaps up from below).
 - **On landing:** the section's line appears immediately; Byte then acts it out (point/inspect with a tool, wave, celebrate) and fires the section's *scene* event (e.g. lights up the SAKA pipeline).
+- **What it says:** each project has its own set of lines (`byte` in `content/projects.ts`): one for the home card and one per case-study block. Rule: never read the page back; add an analogy, an opinion or a pointer instead.
+- **Where it says it:** on wide screens, in a bubble beside Byte inside its perch. On phones (< 640 px), in a card docked to the bottom of the screen with a dismiss button, so the page and Byte are never covered.
 
 ## Interaction
 
@@ -64,6 +66,10 @@ Web Audio synthesis, peak gain ≤ 0.09 × 0.5 master: land (boop), jump (whoosh
 ## Accessibility
 
 Byte is `aria-hidden` decoration; everything it says is also on the page, and "Ask Byte" in the nav is the accessible path to the chat. Reduced motion → static mode. No focus traps; the hit area is not in the tab order. Without JavaScript a static Byte is painted in the hero.
+
+## Frame rate
+
+Physics always steps at 120 Hz with interpolated drawing. Desktop draws every frame. Phones draw every frame while Byte moves (entering, walking, turning, jumping, landing, celebrating, dragged, transitions) and at 30 fps while it stands still. Nothing is drawn while Byte is off-screen.
 
 ## Robustness
 

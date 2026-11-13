@@ -1,5 +1,6 @@
 'use client';
 
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ByteDirector, BEHAVIORS, type Behavior, type BubbleChoice, type Perch } from '@/lib/byte/director';
@@ -204,8 +205,10 @@ export function ByteLayer() {
     let last = performance.now();
     let acc = 0;
     let shown = '';
-    // Phones draw at 30fps (physics stays at 120Hz and is interpolated, so motion stays smooth).
-    const minFrameMs = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 640 ? 32 : 0;
+    // Phones draw every frame while Byte is on the move (walks, jumps, flips, drags are where smoothness
+    // shows) and at 30fps while it stands still. Physics always runs at 120Hz and is interpolated.
+    const calmFrameMs = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 640 ? 32 : 0;
+    const MOVING = new Set(['ENTERING', 'WALKING', 'TURNING', 'JUMPING', 'LANDING', 'RECOVERING', 'CELEBRATING', 'DRAGGED', 'EXITING', 'TRANSITIONING']);
     let lastDraw = 0;
     let lastCostume = engine.costume;
     let lastTool: string | null = null;
@@ -245,7 +248,7 @@ export function ByteLayer() {
       // nothing to draw while Byte is off-screen (it keeps living, we just don't paint it)
       const vy = window.scrollY;
       if (engine.y < vy - 220 || engine.y > vy + window.innerHeight + 260) return;
-      if (minFrameMs && now - lastDraw < minFrameMs) return;
+      if (calmFrameMs && !MOVING.has(engine.state) && now - lastDraw < calmFrameMs) return;
       lastDraw = now;
       figure.current?.apply(computePose(engine, acc / FIXED_DT));
     };
@@ -629,7 +632,19 @@ function belowNav(bottom: number, height: number) {
   return bottom - height < minTop ? minTop + height : bottom;
 }
 
+/** Phones: there is no free space beside Byte, so its lines dock to the bottom of the screen. */
+const DOCK_QUERY = '(max-width: 639px)';
+
 function SpeechBubble({ bubble, onChoice, onClose }: { bubble: NonNullable<BubbleState>; onChoice: (id: string) => void; onClose: () => void }) {
+  const [docked] = useState(() => window.matchMedia(DOCK_QUERY).matches);
+  return docked ? (
+    <BubbleBody bubble={bubble} onChoice={onChoice} onClose={onClose} docked />
+  ) : (
+    <FloatingBubble bubble={bubble} onChoice={onChoice} onClose={onClose} />
+  );
+}
+
+function FloatingBubble({ bubble, onChoice, onClose }: { bubble: NonNullable<BubbleState>; onChoice: (id: string) => void; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number; width: number } | null>(null);
   useEffect(() => {
@@ -668,6 +683,49 @@ function SpeechBubble({ bubble, onChoice, onClose }: { bubble: NonNullable<Bubbl
         style={{ animation: 'rise-in 150ms var(--ease-out) both', transformOrigin: bubble.side === 'left' ? '100% 100%' : '0 100%' }}
         className="rounded-2xl border border-line-strong bg-surface px-3.5 py-2.5 text-[0.9rem] leading-snug text-text shadow-[0_12px_32px_-12px_rgb(0_0_0/0.6)]"
       >
+        <BubbleContent bubble={bubble} onChoice={onChoice} onClose={onClose} />
+      </div>
+    </div>
+  );
+}
+
+/** Phone variant: a card docked above the bottom edge of the screen, outside the page flow. */
+function BubbleBody({ bubble, onChoice, onClose }: { bubble: NonNullable<BubbleState>; onChoice: (id: string) => void; onClose: () => void; docked: true }) {
+  return createPortal(
+    <div
+      role="status"
+      data-testid="byte-bubble"
+      data-docked=""
+      className="fixed inset-x-3 z-45"
+      style={{ bottom: 'calc(12px + env(safe-area-inset-bottom))' }}
+    >
+      <div
+        style={{ animation: 'dock-in 260ms var(--ease-out) both' }}
+        className="mx-auto flex max-w-105 items-start gap-3 rounded-2xl border border-accent/30 bg-surface px-3.5 py-3 text-[0.92rem] leading-snug text-text shadow-[0_18px_40px_-14px_rgb(0_0_0/0.8),0_0_0_1px_rgb(140_229_208/0.06)]"
+      >
+        <svg width="30" height="34" viewBox="0 0 30 34" aria-hidden="true" className="mt-0.5 shrink-0">
+          <rect x="1" y="1" width="28" height="32" rx="8" fill="#8ce5d0" />
+          <rect x="5" y="6" width="20" height="15" rx="4" fill="#0c1119" />
+          <rect x="9" y="11" width="3" height="4" rx="1" fill="#8ce5d0" />
+          <rect x="18" y="11" width="3" height="4" rx="1" fill="#8ce5d0" />
+        </svg>
+        <div className="min-w-0 flex-1">
+          <BubbleContent bubble={bubble} onChoice={onChoice} onClose={onClose} />
+        </div>
+        <button type="button" onClick={onClose} aria-label="Dismiss" className="-mr-1 -mt-1 grid size-8 shrink-0 place-items-center rounded-full text-faint transition-colors hover:text-text">
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+            <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function BubbleContent({ bubble, onChoice, onClose }: { bubble: NonNullable<BubbleState>; onChoice: (id: string) => void; onClose: () => void }) {
+  return (
+    <>
       <span className="mb-0.5 block font-mono text-[0.68rem] uppercase tracking-wider text-accent">
         Byte{bubble.tag && bubble.tag !== 'thinking' ? <span className="text-faint normal-case tracking-normal"> · {bubble.tag}</span> : null}
       </span>
@@ -697,7 +755,6 @@ function SpeechBubble({ bubble, onChoice, onClose }: { bubble: NonNullable<Bubbl
           ))}
         </span>
       )}
-      </div>
-    </div>
+    </>
   );
 }

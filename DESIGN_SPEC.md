@@ -14,7 +14,15 @@
 | `gold` | `#F2C14E` | Awards only (badges, crown, trophy) |
 | `line` | `rgb(168 181 198 / .14)` | Hairlines |
 
+**Project signature colours** (`tint` in `content/projects.ts`): SAKA `#B4A0FF` violet, Helios `#FFAD66` amber, DockHealer `#FF8FA3` rose, PollForge `#F08CF5` orchid, SOM-Gold `#F2C14E` gold. Used for a project's kicker, card hairline, hover glow and its case-study page.
+
 Contrast: all text pairs pass WCAG AA (axe reports no contrast violations).
+
+## Copy rules
+
+- The headline says what kind of engineer, not which awards: "I build software that doesn’t take its own word for it."
+- Every fact has one home on the homepage (awards in the trophy shelf, internship numbers in Experience, test counts on project cards). Nothing is repeated across sections.
+- Byte never reads the page back. Its lines add an analogy, an opinion or a pointer to where to look.
 
 ## Type
 
@@ -31,5 +39,6 @@ Geist Sans for text, Geist Mono for kickers, chips, terminal UI. H1 2.6–4.2 re
 
 - UI transitions: 150–200 ms, `cubic-bezier(.23,1,.32,1)`; buttons scale to .97 on press; chat panel uses a spring (Motion), loaded only when opened.
 - Diagrams animate once when scrolled into view or when Byte inspects them; static otherwise.
+- Effects layer (`app/globals.css`): hero colour field and dot grid, gradient ink on a few words, pointer-following glow on cards, a scroll-linked reading-progress bar, and a gradient border on the contact card that orbits on hover (desktop). The terminal card types itself in once.
+- **Performance rule:** nothing loops forever and nothing repaints per frame. Looping cloud drift, scroll-driven reveals and an animated headline gradient were tried and removed after Lighthouse traces showed them costing up to seconds of main-thread time on phones. Phones get flat versions of masked or rotating layers.
 - `prefers-reduced-motion`: CSS animations collapse; Byte switches to *static mode* (fades between perches, no walking/jumping/flips, no curtain).
-- No parallax, particles or glow backgrounds.

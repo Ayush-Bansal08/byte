@@ -3,7 +3,11 @@ import type { SourceId } from './sources';
 export const PROFILE = {
   name: 'Ayush Bansal',
   role: 'Software engineer',
-  headline: 'I build intelligent systems that solve real problems.',
+  headline: 'I build software that doesn’t take its own word for it.',
+  /** Shown under the headline. Deliberately free of awards and employers: those have their own sections. */
+  intro:
+    'Third-year engineering student at LNMIIT, working across backend, cloud and AI agents. In everything below, the clever part never gets the last word. Something stubborn, measurable and deliberately boring does.',
+  /** Factual one-paragraph bio for search previews, llms.txt and Ask Byte (not shown on the page). */
   summary:
     'Backend services, cloud platforms and AI agents. I placed 2nd in the 0G track at ETHGlobal Mumbai 2026 with SAKA, an autonomous DeFi agent, shipped production APIs and AI voice-agent features at Finn, and co-authored ML research at UNSW Sydney.',
   location: 'Jaipur, India',
@@ -22,9 +26,9 @@ export const PROFILE = {
     email: 'mailto:ab262133@gmail.com',
   },
   about: [
-    'I am an engineering student at LNMIIT Jaipur (class of 2028) who likes the parts of software that have to be right: the queue that must not lose a message, the agent that must refuse an unsafe trade, the deployment that must roll itself back.',
-    'Most of my projects put an unreliable component, such as an LLM, a network or a cloud VM, inside a harness that checks it. SAKA wraps an AI planner in deterministic safety policy. DockHealer only trusts a generated Dockerfile once a real build and a running container agree. Helios lets Prometheus decide whether a release survives.',
-    'Outside projects, I have shipped production code at Finn and worked on reproducible ML research at UNSW Sydney.',
+    'I like the parts of software that have to be right the first time: the queue that can’t drop a message, the agent that has to refuse a bad trade, the release that has to know when to back out.',
+    'Clever components are easy to bolt on. I’m more interested in what happens when they’re wrong, so I design that part first: the exit condition, the check that can’t be argued with, the log that shows what actually happened.',
+    'If a number goes on a slide, I want to be able to rebuild it from scratch on someone else’s machine. That habit started in research and now follows me into every repo.',
   ],
 } as const;
 
@@ -57,19 +61,10 @@ export const ACHIEVEMENTS: Achievement[] = [
     sources: ['resume', 'gh-profile'],
   },
   {
-    id: 'finn',
-    title: 'Finn (Airforge Tech)',
-    metric: '25+ merged PRs',
-    detail: 'Across 5+ production services as a software engineering intern',
-    date: 'May – Jul 2026',
-    href: '/#experience',
-    sources: ['resume', 'gh-profile'],
-  },
-  {
     id: 'paper',
-    title: 'UNSW Sydney',
-    metric: '0% → 76.6% recall',
-    detail: 'Fixed a training bug in the SOM-Gold research pipeline; co-author of the paper (under review)',
+    title: 'Research paper, UNSW Sydney',
+    metric: 'Co-author',
+    detail: 'Second of four authors on the SOM-Gold paper, now with reviewers',
     date: 'May – Aug 2026',
     href: '/work/som-gold',
     sources: ['resume', 'som-citation'],
@@ -96,7 +91,7 @@ export const EXPERIENCE: Role[] = [
     title: 'Software Engineering Intern',
     period: 'May 2026 – Jul 2026',
     place: 'Bengaluru, India',
-    summary: 'Production backend and AI-agent engineering on a live product.',
+    summary: 'Production engineering on a live AI product, where a bad deploy has real customers on the other end.',
     bullets: [
       'Merged 25+ pull requests across 5+ production services, including AI voice agents, backend APIs, authentication, WhatsApp automation, deployment infrastructure and customer-facing dashboards.',
       'Built LLM-powered agent workflows, backend services, REST APIs and event-driven workflows behind real-time conversational AI and enterprise customer interactions.',
@@ -111,7 +106,7 @@ export const EXPERIENCE: Role[] = [
     title: 'AI/ML Research Intern, under Dr. Rohitash Chandra',
     period: 'May 2026 – Aug 2026',
     place: 'Sydney, Australia (remote)',
-    summary: 'Self-organizing maps and autoencoders on hyperspectral satellite data for gold exploration.',
+    summary: 'Turning a research pipeline nobody could reproduce into one anybody can.',
     bullets: [
       'Fixed a critical training bug that raised mineral recall from 0% to 76.6%; co-author of the SOM-Gold paper, currently under review.',
       "Audited the unsupervised ML pipeline and corrected 8 bugs, including an incorrect Cohen's κ, mismatched autoencoder data masks and unseeded PyTorch RNGs, and rebuilt an irreproducible ground-truth raster from a public government WFS API.",

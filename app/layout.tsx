@@ -7,6 +7,7 @@ import { ByteLayerLazy } from '@/components/byte/ByteLayerLazy';
 import { ChatDock } from '@/components/chat/ChatDock';
 import { Footer } from '@/components/site/Footer';
 import { Nav } from '@/components/site/Nav';
+import { Spotlight } from '@/components/site/Spotlight';
 import { TransitionProvider } from '@/components/transition/TransitionProvider';
 import { PROFILE } from '@/content/profile';
 
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: { default: `${PROFILE.name}, software engineer`, template: `%s · ${PROFILE.name}` },
   description:
-    'Ayush Bansal builds backend systems, cloud platforms and AI agents. 2nd place at ETHGlobal Mumbai 2026 (0G track), SWE intern at Finn, ML research intern at UNSW Sydney.',
+    'Ayush Bansal builds backend systems, cloud platforms and AI agents that check their own work. 2nd place at ETHGlobal Mumbai 2026 (0G track), SWE intern at Finn, ML research intern at UNSW Sydney.',
   openGraph: { type: 'website', title: `${PROFILE.name}, software engineer`, description: PROFILE.summary, url: SITE },
   twitter: { card: 'summary_large_image' },
   alternates: { canonical: '/' },
@@ -46,14 +47,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <a
           href="#main"
-          className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-full bg-accent px-4 py-2 font-medium text-bg transition-transform focus:translate-y-0"
+          className="fixed left-3 top-3 z-[100] -translate-y-20 print:hidden rounded-full bg-accent px-4 py-2 font-medium text-bg transition-transform focus:translate-y-0"
         >
           Skip to content
         </a>
+        <div className="progress-bar print:hidden" aria-hidden="true" />
+        <Spotlight />
         <ByteProvider>
           <TransitionProvider>
             <Nav />
-            <main id="main" className="pt-16">
+            <main id="main" className="pt-16 print:pt-0">
               {children}
             </main>
             <Footer />

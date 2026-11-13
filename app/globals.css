@@ -181,6 +181,214 @@
   }
 }
 
+/* ───────────────────────── Colour and motion layer ─────────────────────────
+   Everything below is decorative, CSS-only and compositor-friendly (transform/opacity),
+   so it costs almost nothing on phones. Reduced motion freezes it (see the end of the file). */
+
+@layer components {
+  /* Hero: two slow colour clouds and a fading dot grid behind the headline. */
+  .hero-sky {
+    position: absolute;
+    inset: -120px auto 0 50%;
+    width: 100vw;
+    translate: -50% 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    contain: strict;
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  }
+  .hero-sky::before,
+  .hero-sky::after {
+    content: '';
+    position: absolute;
+    width: 70vmax;
+    height: 70vmax;
+    border-radius: 50%;
+  }
+  .hero-sky::before {
+    left: -22vmax;
+    top: -30vmax;
+    background: radial-gradient(closest-side, rgb(140 229 208 / 0.16), transparent);
+  }
+  .hero-sky::after {
+    right: -26vmax;
+    top: -18vmax;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--tint, #b4a0ff) 14%, transparent), transparent);
+  }
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgb(168 181 198 / 0.16) 1px, transparent 1.4px);
+    background-size: 26px 26px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 30% 35%, #000 20%, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 60% at 30% 35%, #000 20%, transparent 75%);
+  }
+
+  /* Gradient ink for a few chosen words. Static on purpose: animating it repaints the headline every frame. */
+  .ink {
+    background: linear-gradient(100deg, #8ce5d0 0%, #9fd8ff 30%, #b4a0ff 55%, #8ce5d0 80%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    background-position: 0 0;
+  }
+  .ink-gold {
+    background: linear-gradient(100deg, #ffe39a, #f2c14e 45%, #ffad66);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glow-num {
+    text-shadow: 0 0 14px rgb(140 229 208 / 0.55);
+  }
+
+  /* Cards: a light that follows the pointer, plus an optional signature colour (--tint). */
+  .card {
+    position: relative;
+    isolation: isolate;
+    transition: border-color 220ms var(--ease-out), transform 220ms var(--ease-out);
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--tint, #8ce5d0) 11%, transparent), transparent 70%);
+    transition: opacity 260ms var(--ease-out);
+  }
+  @media (hover: hover) {
+    .card:hover::after {
+      opacity: 1;
+    }
+    .card[data-tinted]:hover {
+      border-color: color-mix(in srgb, var(--tint) 45%, transparent);
+    }
+  }
+  .card[data-tinted]::before {
+    content: '';
+    position: absolute;
+    inset: 0 18px auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--tint), transparent);
+    opacity: 0.8;
+  }
+  .tint-kicker {
+    color: var(--tint);
+  }
+  .tint-chip {
+    border-color: color-mix(in srgb, var(--tint) 30%, transparent);
+    color: color-mix(in srgb, var(--tint) 75%, var(--color-muted));
+  }
+
+  /* Contact: a slowly orbiting gradient border (a rotating layer, clipped by the card). */
+  .orbit {
+    overflow: hidden;
+    border-width: 0;
+  }
+  .orbit::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(150%, 900px);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    z-index: -2;
+    background: conic-gradient(from 0deg, transparent 0 60%, #8ce5d0 72%, #b4a0ff 82%, transparent 92%);
+    transform: rotate(35deg);
+  }
+  .orbit::after {
+    opacity: 1;
+    inset: 1px;
+    z-index: -1;
+    border-radius: 17px;
+    background:
+      radial-gradient(600px circle at 85% 0%, rgb(140 229 208 / 0.08), transparent 60%),
+      var(--color-surface-2);
+  }
+
+  /* Primary button: a light sweep on hover. */
+  .btn-primary {
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 28px -10px rgb(140 229 208 / 0.6);
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 0s;
+  }
+  .btn-primary:hover::after {
+    transform: translateX(120%);
+    transition: transform 650ms var(--ease-out);
+  }
+
+  /* Terminal card lines type themselves in, then a caret blinks. */
+  .term-line {
+    animation: term-in 420ms var(--ease-out) both;
+  }
+  .term-caret::after {
+    content: '';
+    display: inline-block;
+    width: 0.55em;
+    height: 1em;
+    margin-left: 0.3em;
+    vertical-align: -0.15em;
+    background: var(--color-accent);
+    animation: cursor-blink 1.1s steps(1) infinite;
+  }
+
+  /* Timeline rail fades from mint to nothing. */
+  .rail {
+    border-image: linear-gradient(to bottom, rgb(140 229 208 / 0.7), rgb(180 160 255 / 0.35) 60%, transparent) 1;
+  }
+}
+
+/* Reading progress bar: scroll-driven, no JavaScript. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .progress-bar {
+      position: fixed;
+      inset: 0 0 auto;
+      height: 2px;
+      z-index: 60;
+      transform-origin: 0 50%;
+      background: linear-gradient(90deg, #8ce5d0, #9fd8ff, #b4a0ff, #f08cf5);
+      animation: grow-x linear both;
+      animation-timeline: scroll(root);
+      pointer-events: none;
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@keyframes term-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
 @keyframes cursor-blink {
   0%,
   55% {
@@ -189,6 +397,13 @@
   56%,
   100% {
     opacity: 0;
+  }
+}
+
+/* movement only: text never passes through a low-contrast, half-faded state */
+@keyframes dock-in {
+  from {
+    transform: translateY(calc(100% + 24px));
   }
 }
 
@@ -210,5 +425,47 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Big-screen, mouse-driven devices get the moving extras; phones keep a static version. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  /* the contact border orbits only while the visitor is on it */
+  .orbit::before {
+    animation: spin 6s linear infinite paused;
+  }
+  .orbit:hover::before {
+    animation-play-state: running;
+  }
+}
+
+/* Phones and tablets: the same look, with the costly layers swapped for flat equivalents. */
+@media not ((hover: hover) and (pointer: fine) and (min-width: 1024px)) {
+  .hero-grid {
+    display: none;
+  }
+  .hero-sky {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .orbit {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--color-surface-2), var(--color-surface-2)) padding-box,
+      linear-gradient(120deg, rgb(140 229 208 / 0.7), rgb(180 160 255 / 0.5) 40%, var(--color-line) 70%) border-box;
+  }
+  .orbit::before,
+  .orbit::after {
+    content: none;
+  }
+  .term-caret::after {
+    animation: none;
+  }
+}
+
+@media print {
+  [data-testid='byte-layer'],
+  [data-testid='byte-bubble'] {
+    display: none !important;
   }
 }

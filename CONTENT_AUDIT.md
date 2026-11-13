@@ -11,9 +11,12 @@ Every claim on the site, where it comes from, and what needs Ayush's confirmatio
 | 3 | **LNMHacks project name** | Résumé gives placement but not the project; a local folder `flashevent_lnmhacks_project` (FlashEvent Markets) suggests it, but nothing public links them | Names no project |
 | 4 | **PollForge chaos testing / pod-termination test** | In the résumé, not in the repository README | Attributed to the résumé ("per the résumé") |
 | 5 | **Résumé contact links** | Résumé text shows `linkedin.com/in/ayush` and `github.com/ayush`; your profile README links `linkedin.com/in/ayush-bansal-21b12a311` and `github.com/Ayush-Bansal08` | Uses the profile README links |
-| 6 | **About section voice** | Written from your projects, not your own words | Please edit `content/profile.ts` → `about` |
-| 7 | **Résumé PDF** | Attached in chat, not in the workspace | Add `public/resume.pdf` to enable the download button |
-| 8 | **Phone number** | On the résumé | Deliberately not published |
+| 6 | **About section and hero copy voice** | The headline, hero intro and About paragraphs were rewritten to state your working principles (drawn from your projects), but they are still my words, not yours | Please edit `content/profile.ts` → `headline`, `intro`, `about` |
+| 6a | **"Third-year"** in the hero | Derived from the résumé dates (Aug 2024 start, Nov 2026 now) | Shown as "Third-year engineering student at LNMIIT" |
+| 7 | **Résumé PDF** | Your original (`Desktop/Ayush Bansal.pdf`, 11 Nov 2026) is now `public/resume.pdf` and is what the Download button gives | Replace that file whenever the résumé changes |
+| 8 | **Phone number** | The site's pages never show it, but your original PDF does, so anyone who downloads it sees it | Remove it from the PDF if you don't want it public |
+| 9 | **SOM-Gold repository link** | The résumé links `github.com/Vi90195/SOM-Exp`; the site links the UNSW group's `sydney-machine-learning/remotesensing-SOM`, which holds the paper citation | Site unchanged; tell me which to show |
+| 10 | **SAKA demo video and 0G post** | Taken from the résumé's “Demo” (lnkd.in → Google Drive) and “X Post” links | Shown on the SAKA card and case study |
 
 ## Verified claims
 

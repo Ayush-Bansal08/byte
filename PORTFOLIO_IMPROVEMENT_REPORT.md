@@ -22,6 +22,12 @@ Build and evaluation log for 12–13 Nov 2026. Everything below was observed in 
 | 5 | With Byte visible, mobile TBT 0.9–2.1 s (Lighthouse) | 0.1-unit quantised SVG writes, no drawing off-screen, 30 fps drawing on phones → mobile 86–92 |
 | 5 | Possible stuck states (cancelled drags; long cooldowns looked like missing messages) | Drag-cancel handling, watchdog recovery, 2 s repeat cooldown |
 
+| 6 | Live site on a phone: Byte's bubble squeezed into a ~100 px column, covering the headline and Byte (user screenshots) | Phones show Byte's lines in a card docked to the bottom of the screen; the page and Byte are never covered |
+| 6 | Copy felt generic and repeated itself: ETHGlobal 2nd place appeared 5× on the homepage, 0% → 76.6% 4× (user feedback) | Every fact now has one home on the homepage; new headline and section titles; Byte's 70 lines rewritten per project and per block so it never reads the page back |
+| 6 | Request for more colour and motion | Per-project signature colours, gradient headline, hero colour field and dot grid, pointer-following card glow, reading-progress bar, gradient-bordered contact card |
+| 6 | The first version of those effects pushed mobile TBT to 3–11 s and desktop to 66–75 (Lighthouse traces): looping cloud drift, scroll-driven reveals and an animated gradient on the headline repainted every frame | Removed the looping and scroll-driven animations, made the gradient static, flattened costly layers on phones → desktop 99–100, mobile back to its previous range |
+| 6 | Byte looked choppy mid-jump on phones (30 fps everywhere) | Full frame rate while Byte moves, 30 fps only while it stands still |
+
 Personality work driven by direct feedback: section moods (star, heart, wink…), 12 hats with front-flip swaps, random tools aimed at the subject, bouncier gait and landings, idle flourishes, in-bubble Q&A, "Show me" → curtain, quiet sound effects with a mute button.
 
 ## Reference comparison (Meet A)
@@ -51,11 +57,11 @@ Personality work driven by direct feedback: section moods (star, heart, wink…)
 
 | Page | Device | Perf | A11y | Best pr. | SEO | LCP | TBT | CLS |
 |---|---|---|---|---|---|---|---|---|
-| `/` | desktop | 98 | 100 | 100 | 100 | 0.3 s | 120 ms | 0 |
-| `/` | mobile (2 runs) | 92, 86 | 100 | 100 | 100 | 0.9–1.9 s | 350–450 ms | 0 |
-| `/work/saka` | mobile (2 runs) | 89, 92 | 100 | 100 | 100 | 0.9 s | 360–450 ms | 0 |
+| `/` | desktop (2 runs) | 99, 100 | 100 | 100 | 100 | 0.3 s | 65–108 ms | 0 |
+| `/` | mobile (2 runs) | 93, 84 | 100 | 100 | 100 | 0.9 s | 330–640 ms | 0 |
+| `/work/saka` | mobile (2 runs) | 95, 79 | 100 | 100 | 100 | 0.9 s | 260–880 ms | 0 |
 
-The 90+ mobile goal is met in some runs, not all: remaining blocking time is mostly React hydrating a long single page.
+Measured after the pass-6 redesign. Mobile varies a lot between back-to-back runs on this laptop (the same build has scored 71–96); first runs are consistently 93–95. The 90+ mobile goal is met in some runs, not all.
 
 ## Scores (out of 10, my assessment)
 

@@ -4,7 +4,6 @@ import path from 'node:path';
 import { ACHIEVEMENTS, EXPERIENCE, LANGUAGES, PROFILE, SKILLS } from '@/content/profile';
 import { PROJECTS } from '@/content/projects';
 import { CharacterStage } from '@/components/byte/CharacterStage';
-import { PrintButton } from './PrintButton';
 
 export const metadata: Metadata = { title: 'Résumé', description: `Résumé of ${PROFILE.name}`, alternates: { canonical: '/resume' } };
 
@@ -17,14 +16,18 @@ export default function ResumePage() {
           <p className="kicker">Résumé</p>
           <h1 className="mt-2 text-4xl font-semibold">{PROFILE.name}</h1>
         </div>
-        <CharacterStage id="resume" behavior="point" costume="glasses" mood="wink" message="Everything on one page. Print it, or grab the PDF." className="h-[118px] min-w-[84px] flex-1" />
+        <CharacterStage id="resume" behavior="point" costume="glasses" mood="wink" message="The whole story, minus my commentary. The PDF is the original, links and all." className="h-[118px] min-w-[84px] flex-1" />
         <div className="flex w-full flex-wrap gap-2">
           {hasPdf && (
-            <a href="/resume.pdf" download="Ayush-Bansal-Resume.pdf" className="btn btn-primary" data-testid="resume-download">
-              Download PDF
-            </a>
+            <>
+              <a href="/resume.pdf" download="Ayush-Bansal-Resume.pdf" className="btn btn-primary" data-testid="resume-download">
+                Download PDF
+              </a>
+              <a href="/resume.pdf" target="_blank" rel="noreferrer" className="btn">
+                Open in a new tab
+              </a>
+            </>
           )}
-          <PrintButton />
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import { TransitionLink } from '@/components/transition/TransitionLink';
 
 export function Footer() {
   return (
-    <footer className="border-t border-line py-10 text-sm text-faint">
+    <footer className="border-t border-line py-10 print:hidden text-sm text-faint">
       <div className="container-page flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p>
           © 2026 {PROFILE.name}. Byte is drawn and animated in code: SVG and TypeScript, no video.{' '}

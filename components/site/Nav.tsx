@@ -34,7 +34,7 @@ export function Nav() {
   }, []);
   const close = () => menu.current?.removeAttribute('open');
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-line bg-bg/92 backdrop-blur-[2px]">
+    <header className="fixed inset-x-0 top-0 z-40 print:hidden border-b border-line bg-bg/92 backdrop-blur-[2px]">
       <nav aria-label="Primary" className="container-page flex h-16 items-center justify-between gap-4">
         <Logo />
         <ul className="hidden items-center gap-1 lg:flex">

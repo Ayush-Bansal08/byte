@@ -5,6 +5,27 @@ export type Flow = { title: string; caption: string; steps: { label: string; det
 export type Section = { heading: string; body?: string[]; bullets?: string[] };
 export type LinkOut = { label: string; href: string; note?: string };
 
+/**
+ * What Byte says at each stop. Rule: never read the page back. Each line adds an angle (an analogy,
+ * an opinion, where to look) that the visitor cannot already see, and stays true to the evidence.
+ */
+export type ByteLines = {
+  card: string;
+  intro: string;
+  overview: string;
+  problem: string;
+  why: string;
+  role: string;
+  arch: string;
+  implementation: string;
+  decisions: string;
+  challenges?: string;
+  testing: string;
+  outcomes: string;
+  source: string;
+  takeaways: string;
+};
+
 export type Project = {
   slug: string;
   name: string;
@@ -15,7 +36,9 @@ export type Project = {
   kind: string;
   stack: string[];
   costume: Costume;
-  byteLine: string;
+  /** Signature colour for this project's card, glow and headings. */
+  tint: string;
+  byte: ByteLines;
   card: { problem: string; solution: string; contribution: string; outcome: string };
   overview: string[];
   problem: string[];
@@ -40,18 +63,34 @@ export const PROJECTS: Project[] = [
     slug: 'saka',
     name: 'SAKA',
     kicker: 'Autonomous AI agent · DeFi',
-    tagline: 'A personal AI DeFi agent that plans on 0G, trades on Uniswap, and proves why it made every move.',
+    tagline: 'Tell an AI “swap $5 of ETH for USDC” and it does it, but only after safety checks it can’t talk its way past.',
     badge: '2nd place · 0G Private Computer track · ETHGlobal Mumbai 2026',
     period: 'Nov 5–7, 2026',
     kind: 'Hackathon team project',
     stack: ['TypeScript', 'React 19', 'Fastify', 'BullMQ', 'PostgreSQL', 'Redis', 'Docker', 'Azure', '0G', 'Uniswap v4', 'MCP', 'Privy', 'WebAuthn', 'Vitest', 'Playwright'],
     costume: 'agent',
-    byteLine: '2nd place at ETHGlobal Mumbai. The AI proposes every trade; deterministic checks decide.',
+    tint: '#b4a0ff',
+    byte: {
+      card: 'Picture an intern with brilliant ideas and zero signing authority. That’s the AI here. Code holds the pen.',
+      intro: 'Antenna up. This one touches real money, so I’ll show you every lock on the door.',
+      overview: 'Reading tip: there are three AI models in here, and not one of them is the boss.',
+      problem: 'A chatbot that’s wrong wastes your time. An agent that’s wrong spends your money.',
+      why: 'Swap “wallet” for “production database” and every word of this still holds.',
+      role: 'Don’t take my word for it. The commit log is public; go count.',
+      arch: 'Watch a trade run the gauntlet. Any gate can say no. None can say yes on its own.',
+      implementation: 'Spot the trick: the parts that think can’t sign, and the part that signs can’t think.',
+      decisions: 'Every row buys safety with convenience. The right-hand column is the honest bill.',
+      challenges: 'Yes, money bugs happened. On a testnet. That’s exactly what testnets are for.',
+      testing: 'For a three-day hackathon, this list is frankly unreasonable. In the best way.',
+      outcomes: 'Crown back on. Judges, prize money, and the receipts to prove both.',
+      source: 'Detective hat: primary sources only. Go ahead, audit me.',
+      takeaways: 'Steal these two. They work for any AI that touches the real world.',
+    },
     card: {
-      problem: 'An AI that can move money has to explain itself, refuse unsafe actions and leave a record nobody can edit.',
-      solution: 'An agent whose AI only proposes. Deterministic scoring, simulation, an independent AI guard and a policy engine decide.',
-      contribution: 'All 41 commits in the public repository are mine, from the 0G integration to the Azure deployment and the interface.',
-      outcome: '2nd place in the 0G track ($1,500), a live demo, and 600+ automated tests.',
+      problem: 'Give an AI your wallet and one bad guess, or one sneaky prompt, can drain it. Most trading bots won’t even tell you why they acted.',
+      solution: 'The AI may only suggest. Code rehearses every trade first, a second AI hunts for danger, and your own limits decide. Risky trades are refused, with the reason on screen.',
+      contribution: 'All 41 changes in the public code are mine: wiring up the AI models, launching it on Azure and designing the app.',
+      outcome: 'A live demo you can try right now, guarded by more than 600 automated tests.',
     },
     overview: [
       'SAKA gives each user a personal AI agent for decentralized finance. You sign in with a passkey, the agent gets its own wallet, and you ask in plain English: "Swap $5 of ETH to USDC", "Put $10 into ETH/USDC", "Is this hook safe?".',
@@ -143,7 +182,10 @@ export const PROJECTS: Project[] = [
       'Put the model in the proposal path, never in the authority path.',
       'Make provenance a feature: request IDs and storage hashes turn "trust me" into something a user can check.',
     ],
-    demo: [{ label: 'Live demo', href: 'https://saka-rust.vercel.app', note: 'Sign in as "demo"' }],
+    demo: [
+      { label: 'Live demo', href: 'https://saka-rust.vercel.app', note: 'Sign in as "demo"' },
+      { label: 'Demo video', href: 'https://drive.google.com/file/d/1f1BYpQFaRfzk45dL3RWnMTBC9i1DfED1/view' },
+    ],
     source: [
       { label: 'GitHub repository', href: 'https://github.com/Ayush-Bansal08/SAKA' },
       { label: 'ETHGlobal showcase', href: 'https://ethglobal.com/showcase/saka-defi-ai-agent-gbb53' },
@@ -155,23 +197,39 @@ export const PROJECTS: Project[] = [
       { src: '/projects/saka/autopilot-simulator.png', alt: 'SAKA Market Event Simulator', caption: 'Market Event Simulator', width: 1440, height: 900 },
       { src: '/projects/saka/hooks.png', alt: 'SAKA hook safety scores', caption: 'Uniswap v4 hooks with deterministic safety scores', width: 1440, height: 900 },
     ],
-    sources: ['saka-showcase', 'saka-repo', 'saka-demo', 'saka-mcp', 'resume'],
+    sources: ['saka-showcase', 'saka-repo', 'saka-demo', 'saka-video', 'saka-x', 'saka-mcp', 'resume'],
   },
   {
     slug: 'helios',
     name: 'Helios',
     kicker: 'Internal developer platform · Kubernetes',
-    tagline: 'The platform around the app: GitOps delivery, releases that judge themselves, and a Kubernetes operator I wrote in Go.',
+    tagline: 'Push code and walk away. Helios ships it to a quarter of users, watches the error rate, and rolls it back by itself if things go wrong.',
     period: '2026',
     kind: 'Solo project',
     stack: ['Go', 'Kubebuilder', 'Kubernetes', 'ArgoCD', 'Argo Rollouts', 'Prometheus', 'Grafana', 'Loki', 'Kyverno', 'Falco', 'Trivy', 'k6', 'Chaos Mesh', 'Azure', 'cert-manager'],
     costume: 'helmet',
-    byteLine: 'Hard hat on. Helios ships through GitOps and rolls itself back when Prometheus says no.',
+    tint: '#ffad66',
+    byte: {
+      card: 'Anyone can deploy once. This is about deploying on a Friday afternoon without anyone panicking.',
+      intro: 'Hard hat on. Welcome to the plumbing nobody notices until it breaks.',
+      overview: 'Imagine every pull request getting its own tiny copy of production. Then tidying up after itself.',
+      problem: 'Shipping one container is a weekend. Shipping safely, every day, is a whole job title.',
+      why: 'Big companies staff whole teams for this. Here’s the one-person version, every layer exposed.',
+      role: 'One owner for every layer, and for every bug you’re about to read about.',
+      arch: 'Each release sits a pop quiz at every step. Fail one and it’s sent straight home.',
+      implementation: 'A few lines of YAML in, a whole environment out. And it cleans up without being asked.',
+      decisions: 'Notice the pattern: provable beats impressive, every single time.',
+      challenges: 'My favourite section. Real errors, real logs, no “it just worked” fairy tales.',
+      testing: 'Claims are cheap. This is where the platform got punched on purpose.',
+      outcomes: 'Find the zero in this grid, then read what it’s counting. That’s the whole pitch.',
+      source: 'The operator’s Go code is linked here. The reconcile loop is the heart of it.',
+      takeaways: 'Sticky-note material. Future-you at 2 a.m. will be grateful.',
+    },
     card: {
-      problem: 'Most Kubernetes projects stop at "I deployed an app". Teams need the platform that lets everyone ship safely.',
-      solution: 'GitOps delivery, metric-gated canary releases, observability, layered security and a custom operator for per-PR preview environments.',
-      contribution: 'Solo: designed, built, broke and fixed every layer, including a Go operator with finalizer-based cleanup.',
-      outcome: 'Runs unchanged on kind locally and k3s on Azure with Let’s Encrypt TLS; autoscaled 1→10 pods under k6 load.',
+      problem: 'Getting an app online once is a weekend project. Updating it every day without users ever noticing a bad release is a whole job.',
+      solution: 'Each update goes out in stages, 25% → 50% → 75% → 100%, and only moves on while live success stays above 95%. Every proposed change also gets its own private copy of the app to test.',
+      contribution: 'Built every layer alone, including a custom Kubernetes add-on in Go that spins those test copies up and tears them down cleanly.',
+      outcome: 'Runs the same on a laptop and on Azure, and scaled itself from 1 to 10 copies when hit by 100 simulated users.',
     },
     overview: [
       'Helios is an internal developer platform on Kubernetes. A git push deploys through ArgoCD; new versions roll out as canaries that query Prometheus mid-rollout and roll back on their own; a custom operator gives every pull request its own isolated preview environment.',
@@ -242,17 +300,33 @@ export const PROJECTS: Project[] = [
     slug: 'dockhealer',
     name: 'DockHealer',
     kicker: 'AI developer tool · Local LLM',
-    tagline: 'A local LLM proposes a Dockerfile; deterministic code decides whether it actually works.',
+    tagline: 'An AI writes the recipe for packaging an app. DockHealer doesn’t believe it until the app actually builds, starts and answers.',
     period: '2026',
     kind: 'Solo project',
     stack: ['Python', 'Docker', 'Ollama', 'Terraform', 'Azure', 'GitHub Actions', 'Trivy', 'pytest'],
     costume: 'medic',
-    byteLine: 'An LLM writes the Dockerfile; a real build and a running container check its homework.',
+    tint: '#ff8fa3',
+    byte: {
+      card: 'Trust, but docker build. That’s the whole philosophy in four words.',
+      intro: 'Medic cap on. Today’s patients: files that look healthy and collapse the moment they run.',
+      overview: 'Think of the model as a confident junior, and everything else here as the senior who actually runs the code.',
+      problem: '“Just ask again until it works” sounds fine. Until it’s 3 a.m. and you’re on attempt 400.',
+      why: 'Swap Docker for any AI task and the recipe survives: generate, check, cap the retries.',
+      role: 'One author, no hiding behind a team. Every call on this page is his.',
+      arch: 'Count the exits on this loop. “Keep trying forever” isn’t one of them.',
+      implementation: 'Build logs get treated like notes from a stranger: read carefully, never obeyed.',
+      decisions: 'Every row trades speed for certainty. An unusual choice for an AI tool. The right one.',
+      challenges: 'Exhibit A for the smoke test. Without it, this mistake would have shipped.',
+      testing: 'Read the second line twice. It’s the most honest sentence on this page.',
+      outcomes: 'Notice what’s missing: a success-rate brag. That comes after real runs, not before.',
+      source: 'Open the evaluation protocol. It’s rare to see the rules published before the results.',
+      takeaways: 'The second one is underrated. Most people do it the other way round.',
+    },
     card: {
-      problem: 'An LLM can write a Dockerfile that looks right and fails only when it runs.',
-      solution: 'Validate → real docker build → hardened smoke test, with a bounded repair loop that knows when to stop for a human.',
-      contribution: 'Solo: CLI, validator, failure classifier, repair loop, evaluation harness and Azure Terraform.',
-      outcome: '186 passing tests; termination is guaranteed regardless of model behaviour.',
+      problem: 'AI-written Docker files often look perfect and fail the moment they run. And “keep asking until it works” can loop forever.',
+      solution: 'Check the file, build it for real, start it for real. If it breaks, the AI gets three tries to fix it, then the tool stops and calls a human.',
+      contribution: 'Built solo: the command-line tool, the rule checker, the error sorter, the retry loop, the test bench and the Azure setup.',
+      outcome: '186 automated tests, and a hard guarantee: it always finishes, however badly the AI behaves.',
     },
     overview: [
       'DockHealer is a Python CLI that containerises small Python and Node projects. A local Ollama model proposes a Dockerfile; ordinary code accepts it only after a 16-rule validator, a real docker build, and a hardened container that answers an HTTP request.',
@@ -303,17 +377,33 @@ export const PROJECTS: Project[] = [
     slug: 'pollforge',
     name: 'PollForge',
     kicker: 'Event-driven system · Azure AKS',
-    tagline: 'A five-service polyglot voting platform, decomposed, containerised, observed and shipped to Kubernetes on Azure.',
+    tagline: 'Cast a vote and watch the results bar move for everyone at once. Behind it: five services, three languages, one Kubernetes cluster on Azure.',
     period: '2026',
     kind: 'Solo project',
     stack: ['Python (Flask)', 'C# (.NET 8)', 'Node.js', 'Redis', 'PostgreSQL', 'Kubernetes', 'Azure AKS', 'ACR', 'GitHub Actions', 'Prometheus', 'cert-manager'],
     costume: 'party',
-    byteLine: 'Five services, three languages: Flask queues votes, .NET saves them, Node streams results live.',
+    tint: '#f08cf5',
+    byte: {
+      card: 'Your vote runs a relay race: handed off, queued, saved, broadcast. No runner waits for the next.',
+      intro: 'Party hat on. Nothing says party like a message queue.',
+      overview: 'Follow one vote from click to chart. It changes hands more often than you’d guess.',
+      problem: 'Ever had a page freeze because the database sneezed? This design says: not today.',
+      why: 'Learn this shape once and you’ll spot it behind half the apps on your phone.',
+      role: 'Solo, end to end. If a pod misbehaves, there’s exactly one person to call.',
+      arch: 'Find the spot where your vote waits in line, so the page never has to.',
+      implementation: 'Ship day, automated: build, tag, push, roll out. Nobody has to remember a password.',
+      decisions: 'Classic trade: instant votes now, results a heartbeat later. Worth it.',
+      challenges: 'He found his own design’s weak spot and wrote it down. Rarer than you’d think.',
+      testing: 'An honest list: what’s verified, and what isn’t yet. I respect a repo that admits it.',
+      outcomes: 'Small numbers, big habits. Look at the middle one.',
+      source: 'Rather watch than read? The demo video shows the votes flying.',
+      takeaways: 'This one applies to every system you’ll ever build. Me included.',
+    },
     card: {
-      problem: 'Show how a small product decomposes into services that deploy, scale and fail independently.',
-      solution: 'Flask → Redis queue → .NET worker → PostgreSQL → Node.js streaming results over Socket.IO, on AKS.',
-      contribution: 'Solo: services, Kubernetes manifests, OIDC CI/CD to ACR and AKS, observability.',
-      outcome: 'Every commit ships to AKS with SHA-tagged images and no stored cloud passwords.',
+      problem: 'Build an app where any single part can crash, update or scale without taking the rest down with it.',
+      solution: 'Votes drop into a fast queue, a background worker saves them, and a separate service pushes fresh results to every open browser each second.',
+      contribution: 'Built solo: all five services, the Kubernetes setup, the push-to-deploy pipeline and the monitoring.',
+      outcome: 'Every code change goes live on Azure by itself, without a single cloud password stored anywhere.',
     },
     overview: ['A browser submits a vote to a Flask service, Redis buffers it, a .NET worker persists it to PostgreSQL, and a Node.js service pushes aggregated results to browsers every second. The same services run locally with Docker Compose and on Azure Kubernetes Service.'],
     problem: ['The request path should not wait on the database, and each concern (accepting votes, persisting them, showing results) should be deployable and restartable on its own.'],
@@ -354,18 +444,33 @@ export const PROJECTS: Project[] = [
     slug: 'som-gold',
     name: 'SOM-Gold',
     kicker: 'ML research · UNSW Sydney',
-    tagline: 'Self-organizing maps and autoencoders on hyperspectral satellite data, made correct and reproducible.',
+    tagline: 'Hunting for gold from space: machine learning on satellite images, made accurate and repeatable.',
     badge: 'Co-author · paper under review',
     period: 'May – Aug 2026',
     kind: 'Research internship (team)',
     stack: ['Python', 'PyTorch', 'MiniSom', 'scikit-learn', 'EnMAP hyperspectral', 'WFS / GIS'],
     costume: 'cap',
-    byteLine: 'Research mode: one training-bug fix took gold-unit recall from 0% to 76.6%.',
+    tint: '#f2c14e',
+    byte: {
+      card: 'Lesson one of science: before you trust the map, audit the ruler.',
+      intro: 'Grad cap on. Different game here: nothing counts until a stranger can reproduce it.',
+      overview: 'Translation: teaching a computer to spot promising rocks from space, without ever showing it gold.',
+      problem: 'Plot twist incoming: the rocks were never the problem.',
+      why: 'Pretty maps are easy. Maps someone else can check are science.',
+      role: 'Think of him as the team’s auditor: every number had to get past him first.',
+      arch: 'Every box here can be rerun by a stranger. That’s the whole point of the diagram.',
+      implementation: 'The scary bugs here never crashed anything. They just quietly made the numbers wrong.',
+      decisions: 'Short table, big consequence. This one choice is what makes the results checkable.',
+      testing: 'Not “it looks better”. Statistically better. In a paper, that’s the difference.',
+      outcomes: 'That first number is the best before-and-after on the whole site.',
+      source: 'The repository belongs to the UNSW group. The citation is right there to check.',
+      takeaways: 'One line, worth framing.',
+    },
     card: {
-      problem: 'A mineral-exploration pipeline whose headline numbers nobody could reproduce, with a model that found no gold-bearing unit at all.',
-      solution: 'Fixed the training bug, audited the pipeline, rebuilt the ground truth from a public API, and added rigorous evaluation.',
-      contribution: 'Second author. Bug fixes, pipeline audit, ground-truth rebuild and evaluation framework.',
-      outcome: 'Recall on the target unit rose from 0% to 76.6%; SOM beats k-means on every metric.',
+      problem: 'The model found zero gold-bearing rock, and no one could reproduce the team’s results on another computer.',
+      solution: 'Found the training bug behind it, fixed 8 pipeline bugs in all, rebuilt the reference map from public data, and swapped eyeballing for real statistics.',
+      contribution: 'Second author on the paper. My part: the bug hunt, the pipeline audit, the rebuilt reference data and how results are measured.',
+      outcome: 'The chosen method beats the usual baseline on every measure, backed by significance tests rather than by eye.',
     },
     overview: ['At UNSW Sydney, under Dr. Rohitash Chandra, I worked on SOM-Gold: comparing self-organizing maps, autoencoders and k-means for finding gold-prospective geology in EnMAP hyperspectral imagery.'],
     problem: ['The model reported 0% recall on the target geological unit because of a training defect, and the ground-truth raster had been exported by hand from desktop GIS and never committed, so results could not be reproduced on another machine.'],

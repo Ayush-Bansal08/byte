@@ -4,7 +4,7 @@ import { ProjectVisual } from '@/components/diagrams/ProjectVisual';
 import { SceneFlow } from '@/components/diagrams/SceneFlow';
 import { TransitionLink } from '@/components/transition/TransitionLink';
 import { ACHIEVEMENTS, EXPERIENCE, PROFILE, SKILLS } from '@/content/profile';
-import { FEATURED, OTHER_PROJECTS } from '@/content/projects';
+import { FEATURED, OTHER_PROJECTS, PROJECTS } from '@/content/projects';
 import type { Behavior } from '@/lib/byte/director';
 import type { Costume, Mood } from '@/lib/byte/engine';
 import { AskCta } from './AskCta';
@@ -40,7 +40,7 @@ function SectionHead({
       <div className="flex items-end gap-4">
         <div className="min-w-0">
           <p className="kicker">
-            <span className="text-accent">{index}</span> · {kicker}
+            <span className="glow-num text-accent">{index}</span> · {kicker}
           </p>
           <h2 id={`${id}-title`} className="mt-2 text-3xl font-semibold sm:text-4xl">
             {title}
@@ -55,23 +55,26 @@ function SectionHead({
 
 export function Hero() {
   return (
-    <section id="top" aria-labelledby="hero-title" className="container-page grid gap-10 pb-16 pt-2 sm:pt-10 lg:grid-cols-[1.25fr_1fr] lg:pt-20 lg:items-end lg:gap-14 lg:pb-24">
+    <section id="top" aria-labelledby="hero-title" className="container-page relative isolate grid gap-10 pb-16 pt-2 sm:pt-10 lg:grid-cols-[1.25fr_1fr] lg:pt-20 lg:items-end lg:gap-14 lg:pb-24">
+      <div className="hero-sky" aria-hidden="true">
+        <div className="hero-grid" />
+      </div>
       <div>
         <div className="flex items-end gap-3">
-          <p className="kicker min-w-0 pb-1">Software engineer · LNMIIT ’28 · Open to internships</p>
+          <p className="kicker min-w-0 pb-1">Backend · Cloud · AI agents</p>
           <CharacterStage
             id="top-m"
             behavior="greet"
             mood="happy"
             bubble="left"
-            message="Hi, I’m Byte. I live in Ayush’s cursor. Tap me to ask about his work."
+            message="Psst. I’m Byte, the blinking cursor next to his name. I got bored and grew legs. Tap me any time."
             className="h-[112px] min-w-[84px] flex-1 lg:hidden"
           />
         </div>
         <h1 id="hero-title" className="mt-3 text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.035em] sm:text-6xl lg:text-[4.2rem]">
-          I build intelligent systems that solve real problems.
+          I build software that <span className="ink">doesn’t take its own word for it.</span>
         </h1>
-        <p className="mt-6 max-w-xl text-[1.08rem] text-muted">{PROFILE.summary}</p>
+        <p className="mt-6 max-w-xl text-[1.08rem] text-muted">{PROFILE.intro}</p>
         <div className="mt-8 flex flex-wrap gap-2.5">
           <a href="#work" className="btn btn-primary group">
             Explore projects <Arrow />
@@ -94,7 +97,7 @@ export function Hero() {
           mood="happy"
           bubble="left"
           align="right"
-          message="Hi, I’m Byte. I live in Ayush’s cursor. Want the ten-second tour?"
+          message="Psst. I’m Byte, the blinking cursor next to his name. I got bored and grew legs. Tour?"
           choices={[
             { id: 'tour', label: 'Show me his best work' },
             { id: 'ask', label: 'Ask a question' },
@@ -113,19 +116,32 @@ export function Hero() {
             <span className="ml-2 text-[0.72rem] text-faint">ayush@portfolio: ~</span>
           </div>
           <dl className="space-y-2.5 px-4 py-4">
-            {[
-              ['whoami', 'Ayush Bansal · B.Tech ECE, LNMIIT (2028)'],
-              ['focus', 'backend · cloud platforms · AI agents'],
-              ['latest', '2nd place, ETHGlobal Mumbai 2026 (0G track)'],
-              ['experience', 'SWE intern @ Finn · ML research intern @ UNSW'],
-            ].map(([k, v]) => (
-              <div key={k}>
-                <dt className="text-faint">
-                  <span className="text-accent">$</span> {k}
-                </dt>
-                <dd className="text-text">{v}</dd>
-              </div>
-            ))}
+            <div className="term-line" style={{ animationDelay: '150ms' }}>
+              <dt className="text-faint">
+                <span className="text-accent">$</span> whoami
+              </dt>
+              <dd className="text-text">ayush bansal · jaipur, india</dd>
+            </div>
+            <div className="term-line" style={{ animationDelay: '450ms' }}>
+              <dt className="text-faint">
+                <span className="text-accent">$</span> ls ./work
+              </dt>
+              <dd className="-my-1 flex flex-wrap gap-x-3">
+                {PROJECTS.map((x) => (
+                  <span key={x.slug} style={{ color: x.tint }}>
+                    <TransitionLink href={`/work/${x.slug}`} label={x.name} className="inline-block py-1 underline decoration-transparent underline-offset-4 transition-colors hover:decoration-current">
+                      {x.slug}/
+                    </TransitionLink>
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div className="term-line" style={{ animationDelay: '750ms' }}>
+              <dt className="text-faint">
+                <span className="text-accent">$</span> byte --help
+              </dt>
+              <dd className="term-caret text-text">tap the little guy. he’s read everything here.</dd>
+            </div>
           </dl>
         </div>
       </div>
@@ -139,15 +155,15 @@ export function Achievements() {
       <div className="container-page py-14">
         <div className="flex items-end gap-4">
           <h2 id="achievements-title" className="kicker min-w-0 pb-6">
-            <span className="text-accent">01</span> · Recognition and impact
+            <span className="glow-num text-accent">01</span> · Trophy shelf
           </h2>
-          <CharacterStage id="achievements" behavior="celebrate" costume="crown" mood="star" message="2nd at ETHGlobal, 1st at LNMHacks, 25+ PRs merged at Finn. The crown is earned." className="h-[112px] min-w-[84px] flex-1" />
+          <CharacterStage id="achievements" behavior="celebrate" costume="crown" mood="star" message="Judges picked two of these. The third is still with the reviewers. Fingers crossed." className="h-[112px] min-w-[84px] flex-1" />
         </div>
-        <ul className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3">
           {ACHIEVEMENTS.map((a) => {
             const inner = (
               <>
-                <p className="text-[1.65rem] font-semibold leading-none tracking-tight text-text">{a.metric}</p>
+                <p className="ink-gold text-[1.65rem] font-semibold leading-none tracking-tight">{a.metric}</p>
                 <p className="mt-3 font-medium text-text">{a.title}</p>
                 <p className="mt-1 text-[0.9rem] leading-snug text-muted">{a.detail}</p>
                 <p className="mt-3 font-mono text-[0.7rem] text-faint">{a.date}</p>
@@ -185,15 +201,15 @@ export function Work() {
         id="work"
         index="02"
         kicker="Selected work"
-        title="Projects with real engineering depth"
-        intro="Each one has a full case study: the problem, the architecture, the hard decisions, how it was tested, and what it still can’t do."
-        stage={{ behavior: 'point', costume: 'detective', mood: 'wink', message: 'Five projects, five hats. Start with SAKA: 2nd place at ETHGlobal Mumbai.', lookAt: 'saka' }}
+        title="Five projects. One stubborn habit."
+        intro="Every case study goes past the demo: the calls I’d defend, the bugs that bit back, and what still doesn’t work."
+        stage={{ behavior: 'point', costume: 'detective', mood: 'wink', message: 'Pick a card, any card. I’ll hop over and give you the backstage version.', lookAt: 'saka' }}
       />
 
-      <article id="saka" aria-labelledby="saka-title" className="card relative p-5 sm:p-8">
+      <article id="saka" aria-labelledby="saka-title" data-tinted="" style={{ '--tint': p.tint } as React.CSSProperties} className="card relative p-5 sm:p-8">
         <div className="flex items-start gap-4">
           <div className="min-w-0">
-            <p className="kicker">{p.kicker}</p>
+            <p className="kicker tint-kicker">{p.kicker}</p>
             <h3 id="saka-title" className="mt-2 text-3xl font-semibold sm:text-[2.4rem]">
               {p.name}
             </h3>
@@ -205,15 +221,10 @@ export function Work() {
             mood="focused"
             scene="saka-pipeline"
             lookAt="saka-pipeline"
-            message="The AI only proposes. Score, simulate, guard, policy: then money moves. Watch."
+            message={p.byte.card}
             className="h-[112px] min-w-[84px] flex-1"
           />
         </div>
-        {p.badge && (
-          <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/[0.07] px-3 py-1 text-[0.82rem] text-gold">
-            <span aria-hidden="true">◆</span> {p.badge}
-          </p>
-        )}
         <p className="mt-4 max-w-3xl text-[1.1rem] text-text">{p.tagline}</p>
 
         <dl className="mt-6 grid gap-5 text-[0.95rem] sm:grid-cols-2 lg:grid-cols-4">
@@ -247,9 +258,11 @@ export function Work() {
           <TransitionLink href={`/work/${p.slug}`} label={p.name} className="btn btn-primary group">
             Read the case study <Arrow />
           </TransitionLink>
-          <a href={p.demo[0]!.href} target="_blank" rel="noreferrer" className="btn">
-            Live demo <External />
-          </a>
+          {p.demo.map((d) => (
+            <a key={d.href} href={d.href} target="_blank" rel="noreferrer" className="btn">
+              {d.label} <External />
+            </a>
+          ))}
           <a href={p.source[0]!.href} target="_blank" rel="noreferrer" className="btn">
             Source <External />
           </a>
@@ -258,10 +271,10 @@ export function Work() {
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         {OTHER_PROJECTS.map((q) => (
-          <article key={q.slug} id={q.slug} aria-labelledby={`${q.slug}-title`} className="card group/card flex flex-col p-5 sm:p-6">
+          <article key={q.slug} id={q.slug} aria-labelledby={`${q.slug}-title`} data-tinted="" style={{ '--tint': q.tint } as React.CSSProperties} className="card group/card flex flex-col p-5 sm:p-6">
             <div className="flex items-start gap-3">
               <div className="min-w-0">
-                <p className="kicker">{q.kicker}</p>
+                <p className="kicker tint-kicker">{q.kicker}</p>
                 <h3 id={`${q.slug}-title`} className="mt-1.5 text-2xl font-semibold">
                   {q.name}
                 </h3>
@@ -273,11 +286,10 @@ export function Work() {
                 mood={q.slug === 'som-gold' ? 'focused' : q.slug === 'pollforge' ? 'wink' : 'happy'}
                 scene={`${q.slug}-visual`}
                 lookAt={`${q.slug}-visual`}
-                message={q.byteLine}
+                message={q.byte.card}
                 className="h-[106px] min-w-[80px] flex-1"
               />
             </div>
-            {q.badge && <p className="mt-2 text-[0.82rem] text-gold">{q.badge}</p>}
             <p className="mt-3 text-muted">{q.tagline}</p>
             <div className="mt-4">
               <ProjectVisual slug={q.slug} id={`${q.slug}-visual`} />
@@ -329,10 +341,10 @@ export function Experience() {
           id="experience"
           index="03"
           kicker="Experience"
-          title="Where I’ve shipped"
-          stage={{ behavior: 'point', costume: 'headset', mood: 'happy', lookAt: 'role-finn', message: 'Two internships: one shipping production code, one doing research.' }}
+          title="One summer, two very different jobs"
+          stage={{ behavior: 'point', costume: 'headset', mood: 'happy', lookAt: 'role-finn', message: 'Left tab: production. Right tab: peer review. He kept both open all summer.' }}
         />
-        <ol className="relative space-y-10 border-l border-line pl-6 sm:pl-8">
+        <ol className="rail relative space-y-10 border-l pl-6 sm:pl-8">
           {EXPERIENCE.map((r) => (
             <li key={r.id} id={`role-${r.id}`} className="relative">
               <span aria-hidden="true" className="absolute -left-[31px] top-2 size-3 rounded-full border-2 border-accent bg-bg sm:-left-[39px]" />
@@ -353,7 +365,7 @@ export function Experience() {
                   costume={r.id === 'unsw' ? 'cap' : 'headset'}
                   mood={r.id === 'unsw' ? 'focused' : 'happy'}
                   lookAt={`role-${r.id}`}
-                  message={r.id === 'unsw' ? 'Research mode: one bug fix took mineral recall from 0% to 76.6%.' : 'Real users, real production: AI voice agents, APIs and twice-weekly deploys.'}
+                  message={r.id === 'unsw' ? 'Detective work: the rocks were fine all along. The training code was the culprit.' : 'Notice the mix: AI features up front, and the APIs, queues and deploys that keep them standing.'}
                   className="h-[104px] min-w-[84px] flex-1"
                 />
               </div>
@@ -401,9 +413,9 @@ export function Skills() {
           id="skills"
           index="04"
           kicker="Technical strengths"
-          title="Grouped by what I can build"
-          intro="Not a wall of logos: each capability links to the work that proves it."
-          stage={{ behavior: 'think', costume: 'glasses', mood: 'focused', message: 'Grouped by what he can build, and each one links to the project that proves it.' }}
+          title="Toolbox, sorted by job"
+          intro="No five-star skill bars. Each group ends with the projects where it was actually used."
+          stage={{ behavior: 'think', costume: 'glasses', mood: 'focused', message: 'Find the card closest to your team’s stack. I’ll wait.' }}
         />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {SKILLS.map((g) => (
@@ -456,12 +468,12 @@ export function About() {
       <div className="container-page grid gap-10 py-24 lg:grid-cols-[1fr_1.4fr]">
         <div>
           <p className="kicker">
-            <span className="text-accent">05</span> · About
+            <span className="glow-num text-accent">05</span> · About
           </p>
           <h2 id="about-title" className="mt-2 text-3xl font-semibold sm:text-4xl">
-            The person behind the projects
+            Why I build like this
           </h2>
-          <CharacterStage id="about" behavior="wave" costume="beanie" mood="happy" message="The person behind the code: B.Tech ECE at LNMIIT Jaipur, class of 2028." className="mt-4 h-[118px] w-full" align="left" bubble="right" />
+          <CharacterStage id="about" behavior="wave" costume="beanie" mood="happy" message="Off the clock for a second. This bit is about how he thinks, not what he’s won." className="mt-4 h-[118px] w-full" align="left" bubble="right" />
         </div>
         <div className="space-y-5 text-[1.05rem] text-muted">
           {PROFILE.about.map((p) => (
@@ -477,19 +489,19 @@ export function Contact() {
   return (
     <section id="contact" aria-labelledby="contact-title" className="border-t border-line bg-bg-2/60">
       <div className="container-page py-24">
-        <div className="card relative overflow-hidden p-6 sm:p-10">
+        <div className="card orbit relative overflow-hidden p-6 sm:p-10">
           <div className="flex items-end gap-4">
             <div className="min-w-0">
               <p className="kicker">
-                <span className="text-accent">06</span> · Contact
+                <span className="glow-num text-accent">06</span> · Contact
               </p>
               <h2 id="contact-title" className="mt-2 text-3xl font-semibold sm:text-5xl">
-                Let’s talk.
+                Got something that <span className="ink">has to work</span>?
               </h2>
             </div>
-            <CharacterStage id="contact" behavior="wave" mood="heart" message="Hiring for an internship? One email reaches Ayush directly." className="h-[118px] min-w-[84px] flex-1" />
+            <CharacterStage id="contact" behavior="wave" mood="heart" message="This is where I hand you over. No forms, no bots (well, except me). Just his inbox." className="h-[118px] min-w-[84px] flex-1" />
           </div>
-          <p className="mt-5 max-w-xl text-muted">{PROFILE.seeking} Email, LinkedIn or GitHub all reach me.</p>
+          <p className="mt-5 max-w-xl text-muted">I’m after software engineering internships in backend, cloud and AI. Email is the fastest way to reach me; LinkedIn and GitHub work too.</p>
           <a href={PROFILE.links.email} className="mt-7 inline-block break-all text-2xl font-semibold text-accent underline decoration-accent/40 underline-offset-[6px] transition-colors hover:decoration-accent sm:text-3xl">
             {PROFILE.email}
           </a>
