@@ -319,6 +319,14 @@ export function ByteLayer() {
     const poll = window.setInterval(() => !document.hidden && started.current && remeasure(), 1200);
     window.addEventListener('load', remeasure);
     window.addEventListener('scroll', onScroll, { passive: true });
+    // The moment scrolling (including a phone's momentum fling) stops, Byte goes: no debounce.
+    const onScrollEnd = () => {
+      const top = window.scrollY;
+      director.setViewport({ top, bottom: top + window.innerHeight, left: window.scrollX, right: window.scrollX + window.innerWidth });
+      director.want(pickActive(perchesRef.current, top, window.innerHeight, director.current));
+      director.commit();
+    };
+    window.addEventListener('scrollend', onScrollEnd, { passive: true });
 
     // ---- input
     // Byte stays near the visitor's attention: resting the pointer on a card summons it there.
@@ -400,6 +408,7 @@ export function ByteLayer() {
       window.clearTimeout(bubbleTimer.current);
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('scrollend', onScrollEnd);
       window.removeEventListener('pointermove', onPointer);
       window.removeEventListener('pointerdown', onPointer);
       window.removeEventListener('keydown', onKey);

@@ -1,12 +1,20 @@
 /**
  * Byte's sound effects, synthesised with the Web Audio API (no audio files).
- * Quiet by design: every effect peaks well below full scale. Audio only starts after the
- * visitor's first click or key press (browser autoplay rules), and can be muted.
+ * Soft but clearly audible on a phone speaker; a limiter keeps every effect from getting harsh.
+ * Audio can only start inside a real tap/click/key press (browser autoplay rules), and can be muted.
  */
 export type Sfx = 'land' | 'jump' | 'pop' | 'blip' | 'shing' | 'chirp' | 'sparkle' | 'swoosh';
 
 const KEY = 'byte:sound';
-const MASTER = 0.5; // overall ceiling; individual effects are quieter still
+const MASTER = 0.9;
+/** Every effect's peak is multiplied by this (the original levels were inaudible on phone speakers). */
+const LEVEL = 3;
+
+/**
+ * Events that count as a user gesture somewhere. On touch screens `pointerdown` does NOT unlock audio
+ * (and the first touch is usually a scroll), so we keep trying on every gesture until audio is running.
+ */
+const GESTURES = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const;
 
 class ByteSound {
   private ctx: AudioContext | null = null;
@@ -14,6 +22,7 @@ class ByteSound {
   private noise: AudioBuffer | null = null;
   private last = new Map<Sfx, number>();
   private listeners = new Set<(on: boolean) => void>();
+  private onGesture = () => this.unlock();
   muted = false;
 
   constructor() {
@@ -23,23 +32,49 @@ class ByteSound {
     } catch {
       /* storage unavailable */
     }
-    const unlock = () => this.unlock();
-    window.addEventListener('pointerdown', unlock, { once: true, capture: true });
-    window.addEventListener('keydown', unlock, { once: true, capture: true });
+    for (const g of GESTURES) window.addEventListener(g, this.onGesture, { capture: true, passive: true });
   }
 
+  /** Runs inside a user gesture: create the context once, then make sure it is actually running. */
   private unlock() {
-    if (this.ctx) return;
     const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AC) return;
-    this.ctx = new AC();
-    this.master = this.ctx.createGain();
-    this.master.gain.value = MASTER;
-    this.master.connect(this.ctx.destination);
-    const len = Math.floor(this.ctx.sampleRate * 0.5);
-    this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
-    const data = this.noise.getChannelData(0);
-    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    if (!AC) return this.stopListening();
+    if (!this.ctx) {
+      this.ctx = new AC();
+      const limiter = this.ctx.createDynamicsCompressor();
+      limiter.threshold.value = -10;
+      limiter.knee.value = 6;
+      limiter.ratio.value = 12;
+      limiter.attack.value = 0.002;
+      limiter.release.value = 0.12;
+      limiter.connect(this.ctx.destination);
+      this.master = this.ctx.createGain();
+      this.master.gain.value = MASTER;
+      this.master.connect(limiter);
+      const len = Math.floor(this.ctx.sampleRate * 0.5);
+      this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const data = this.noise.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    }
+    const ctx = this.ctx;
+    if (ctx.state === 'running') return this.stopListening();
+    // iOS/WebKit only unlocks once something is actually started inside the gesture: a 1-sample silent buffer.
+    const src = ctx.createBufferSource();
+    src.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    src.connect(ctx.destination);
+    src.start(0);
+    void ctx.resume().then(() => {
+      if (ctx.state === 'running') this.stopListening();
+    }, () => {});
+  }
+
+  private stopListening() {
+    for (const g of GESTURES) window.removeEventListener(g, this.onGesture, { capture: true });
+  }
+
+  /** True once the browser has let audio start (for tests and the mute button). */
+  get ready() {
+    return this.ctx?.state === 'running';
   }
 
   setMuted(m: boolean) {
@@ -50,6 +85,12 @@ class ByteSound {
       /* ignore */
     }
     this.listeners.forEach((l) => l(!m));
+    // Turning sound on is itself a click: answer with a chirp so the visitor knows it works.
+    if (!m) {
+      const c = this.ctx;
+      if (c?.state === 'running') this.play('chirp');
+      else void c?.resume().then(() => c.state === 'running' && this.play('chirp'), () => {});
+    }
   }
 
   subscribe(fn: (on: boolean) => void) {
@@ -67,10 +108,14 @@ class ByteSound {
     const prev = this.last.get(sfx) ?? -1;
     if (now - prev < 0.09) return; // never machine-gun the same effect
     this.last.set(sfx, now);
-    if (ctx.state === 'suspended') void ctx.resume();
+    if (ctx.state !== 'running') {
+      void ctx.resume().catch(() => {});
+      return; // scheduling into a suspended context only produces a late burst of stale sounds
+    }
     const k = Math.max(0.3, Math.min(1.2, intensity));
 
-    const tone = (type: OscillatorType, f0: number, f1: number, dur: number, peak: number, delay = 0) => {
+    const tone = (type: OscillatorType, f0: number, f1: number, dur: number, peakRaw: number, delay = 0) => {
+      const peak = Math.min(0.6, peakRaw * LEVEL);
       const o = ctx.createOscillator();
       const g = ctx.createGain();
       o.type = type;
@@ -83,8 +128,9 @@ class ByteSound {
       o.start(now + delay);
       o.stop(now + delay + dur + 0.02);
     };
-    const hiss = (f0: number, f1: number, dur: number, peak: number, q = 0.8) => {
+    const hiss = (f0: number, f1: number, dur: number, peakRaw: number, q = 0.8) => {
       if (!this.noise) return;
+      const peak = Math.min(0.6, peakRaw * LEVEL);
       const src = ctx.createBufferSource();
       src.buffer = this.noise;
       const bp = ctx.createBiquadFilter();

@@ -28,7 +28,7 @@ export type EngineConfig = {
 
 export const DEFAULT_CONFIG: EngineConfig = {
   scale: 1.15,
-  gravity: 2600,
+  gravity: 3300,
   walkSpeed: 150,
   walkAccel: 700,
   stride: 15,
@@ -464,6 +464,8 @@ export type JumpOpts = {
   /** start from current position even if airborne (used for drag release and drop-ins) */
   noAnticipation?: boolean;
   exitHidden?: boolean;
+  /** >1 makes this jump quicker (used when Byte re-enters from off-screen) */
+  gravityScale?: number;
 };
 
 /**
@@ -485,7 +487,7 @@ export function jumpTo(tx: number, ty: number, opts: JumpOpts = {}): Action {
     t0 = t;
     x0 = e.x;
     y0 = e.y;
-    const g = e.cfg.gravity;
+    const g = e.cfg.gravity * (opts.gravityScale ?? 1);
     const apexY = Math.min(y0, ty) - (opts.apex ?? e.cfg.jumpApex);
     const up = Math.max(0, y0 - apexY);
     vy0 = -Math.sqrt(2 * g * up);
@@ -526,7 +528,7 @@ export function jumpTo(tx: number, ty: number, opts: JumpOpts = {}): Action {
       }
       if (phase === 'air') {
         const tt = Math.min(t - t0, T);
-        const g = e.cfg.gravity;
+        const g = e.cfg.gravity * (opts.gravityScale ?? 1);
         e.x = x0 + vx0 * tt;
         e.y = y0 + vy0 * tt + 0.5 * g * tt * tt;
         e.vx = vx0;

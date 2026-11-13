@@ -129,12 +129,32 @@ describe('ByteDirector', () => {
     run(4);
     d.setViewport({ top: 2500, bottom: 3400, left: 0, right: 1440 });
     d.want('far');
-    run(0.32);
+    run(0.15);
     // Byte was above the viewport (the visitor scrolled down), so it drops in from the top edge
     expect(e.y).toBeLessThan(2500);
     run(4);
     expect(e.y).toBe(3000);
     expect(e.costume).toBe('helmet');
+  });
+
+  it('reacts within a frame once scrolling stops, and speaks at touchdown', () => {
+    const { e, d, run, bubbles } = setup();
+    d.dropIn('top');
+    run(4);
+    const lines = () => bubbles.filter(Boolean).length;
+    const before = lines();
+    d.want('saka');
+    d.commit();
+    run(1 / 60);
+    expect(e.state).not.toBe('IDLE');
+    let landedAt = -1;
+    e.on((ev) => {
+      if (ev.type === 'landed' && landedAt < 0) landedAt = e.time;
+    });
+    for (let i = 0; i < 480 && lines() === before; i++) run(1 / 120);
+    expect(landedAt).toBeGreaterThan(0);
+    // the line appears on the same step Byte touches down, not after the landing squash
+    expect(e.time - landedAt).toBeLessThan(0.02);
   });
 
   it('gets drowsy and sleeps when ignored, and wakes on interaction', () => {

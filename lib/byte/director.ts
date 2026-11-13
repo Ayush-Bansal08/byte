@@ -74,6 +74,8 @@ export class ByteDirector {
   viewport: Viewport = { top: 0, bottom: 800, left: 0, right: 1200 };
   lastInteraction = 0;
   sleepAfter = 32;
+  /** how long a scroll target must hold before Byte heads there (scrollend skips the wait) */
+  settleAfter = 0.08;
   private nextIdleAt = 4;
   private lastIdle = '';
   /** when Byte last spoke at each perch; it repeats itself only after a while */
@@ -88,6 +90,8 @@ export class ByteDirector {
   private relocating = false;
   /** while a bubble is up, Byte doesn't wander away from it */
   private bubbleUntil = 0;
+  /** the line for the perch Byte is travelling to: said at touchdown, not after the landing squash */
+  private pendingSay: (() => number) | null = null;
 
   constructor(
     readonly engine: ByteEngine,
@@ -95,6 +99,11 @@ export class ByteDirector {
   ) {
     engine.on((ev) => {
       if (ev.type === 'action' && ev.phase === 'end' && ev.name === 'relocated') this.relocating = false;
+      if (ev.type === 'landed' && this.relocating && this.pendingSay) {
+        const say = this.pendingSay;
+        this.pendingSay = null;
+        say();
+      }
       if (ev.type === 'state') this.stateSince = engine.time;
     });
   }
@@ -151,6 +160,11 @@ export class ByteDirector {
     if (id === this.desired) return;
     this.desired = id;
     this.desiredSince = this.now;
+  }
+
+  /** Scrolling has stopped: the current target is final, so go now instead of waiting out the debounce. */
+  commit() {
+    if (this.desired) this.desiredSince = -Infinity;
   }
 
   interact(kind: 'pointer' | 'scroll' | 'key' | 'touch' | 'poke') {
@@ -278,7 +292,7 @@ export class ByteDirector {
     if (this.engaged) return;
 
     // relocate once the scroll target has been stable for a moment
-    if (this.desired && this.desired !== this.current && !this.relocating && this.now - this.desiredSince > 0.12 && e.grounded) {
+    if (this.desired && this.desired !== this.current && !this.relocating && this.now - this.desiredSince > this.settleAfter && e.grounded) {
       if (s !== 'SLEEPING' && s !== 'DROWSY' && this.chat !== 'thinking') {
         this.goTo(this.desired);
         return;
@@ -393,6 +407,7 @@ export class ByteDirector {
     this.hooks.bubble?.(null);
     const tx = clamp(p.standX, p.left + 14, p.right - 14);
     const ty = p.y;
+    this.pendingSay = null;
 
     if (this.mode === 'static') {
       e.costume = p.costume;
@@ -407,8 +422,10 @@ export class ByteDirector {
       const fromBelow = e.y > this.viewport.bottom;
       e.clear();
       e.machine.reset('IDLE', 'reenter');
+      // (the re-entry jump below uses stronger gravity, so the drop-in stays quick)
       e.place(tx + (tx > (this.viewport.left + this.viewport.right) / 2 ? 40 : -40), fromBelow ? this.viewport.bottom + 70 : this.viewport.top - 90);
     }
+    const reentry = !opts.fromLogo && !opts.offscreen && !visible;
     const dy = ty - e.y;
     const dx = tx - e.x;
     const sameSurface = Math.abs(dy) < 3 && !opts.fromLogo;
@@ -427,6 +444,7 @@ export class ByteDirector {
           noAnticipation: fall,
           costumeAtApex: p.costume !== e.costume ? p.costume : undefined,
           anticipation: opts.fromLogo ? 0.22 : undefined,
+          gravityScale: reentry || opts.offscreen ? 1.5 : undefined,
         }),
       );
     }
@@ -446,15 +464,19 @@ export class ByteDirector {
     const firstTime = last === undefined || this.now - last > this.repeatAfter;
     const look = p.lookPoint;
     const out: Action[] = [];
+    let said = false;
+    let saidFor = 0;
     const sayIt = () => {
+      if (said) return saidFor;
+      said = true;
       if (p.message && firstTime) {
         this.told.set(p.id, this.now);
-        const secs = clamp(p.message.length * 0.055, 2.6, 6.5);
-        this.say(p.message, secs, p.choices, p.id);
-        return secs;
+        saidFor = clamp(p.message.length * 0.055, 2.6, 6.5);
+        this.say(p.message, saidFor, p.choices, p.id);
       }
-      return 0;
+      return saidFor;
     };
+    if (!staticMode) this.pendingSay = sayIt;
     if (staticMode) {
       out.push({ name: 'arrive-static', state: 'IDLE', update: () => (sayIt(), true) });
       return out;
@@ -469,6 +491,7 @@ export class ByteDirector {
       name: 'announce',
       state: 'SPEAKING',
       start: (en) => {
+        this.pendingSay = null;
         spoken = sayIt();
         if (spoken) {
           en.mouth = 'talk';
