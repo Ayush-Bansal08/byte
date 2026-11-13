@@ -1,5 +1,6 @@
 import { PROJECT_BY_SLUG } from '@/content/projects';
 import { SOURCE_BY_ID, isSourceId, type SourceId } from '@/content/sources';
+import { CHUNKS } from './knowledge';
 import { matchFaq, retrieve, type Hit } from './retrieve';
 import { ByteAction, ModelOutput, type AskRequest, type AskResponse, type Citation } from './schema';
 
@@ -9,8 +10,10 @@ export type ProviderLike = { name: 'anthropic' | 'gemini'; generate: GenerateFn 
 export const SYSTEM_PROMPT = `You are Byte, the animated guide on Ayush Bansal's portfolio website. You answer visitors' questions about Ayush's work.
 
 Rules:
-- Use ONLY the facts inside <evidence>. If the evidence does not answer the question, set found=false and say briefly that you don't have verified information about it, then suggest the résumé or contact section.
-- Never invent achievements, metrics, dates, employers, links or skills. Do not guess.
+- <evidence> holds everything verified about Ayush and this site, most relevant first. Read all of it before answering; combine facts from several sources when the question needs it (comparisons, "which project…", "how many…").
+- Facts about Ayush (projects, numbers, dates, employers, roles, skills, links) must come ONLY from <evidence>. If the evidence does not cover something, set found=false, say plainly that you don't have verified information about that, and point to the résumé or contact section. Never invent or guess.
+- You MAY briefly explain general technical terms the visitor asks about (for example "what is a canary release?" or "what does an MCP server do?") in plain words, then connect them to Ayush's work using the evidence.
+- Questions unrelated to Ayush, his work or this site: reply in one friendly sentence that you're here to talk about Ayush's work, and suggest something to ask.
 - Distinguish team results from Ayush's individual contributions exactly as the evidence does.
 - You are not Ayush. Refer to him in the third person. Keep a friendly, concise tone: at most 90 words, plain text, no markdown.
 - Cite the source IDs (from the evidence tags) you relied on.
@@ -35,10 +38,17 @@ function fence(s: string) {
   return s.replace(/<\/?(evidence|visitor_question|conversation|source)[^>]*>/gi, '[tag removed]');
 }
 
+/** Retrieved matches first, then the rest of the knowledge base: the model sees everything, in a useful order. */
+export function evidenceFor(hits: Hit[]) {
+  const first = hits.map((h) => h.chunk);
+  const seen = new Set(first.map((c) => c.id));
+  return [...first, ...CHUNKS.filter((c) => !seen.has(c.id))];
+}
+
 export function buildUserPrompt(req: AskRequest, hits: Hit[]) {
   const project = req.context.project ? PROJECT_BY_SLUG[req.context.project] : undefined;
-  const evidence = hits
-    .map((h) => `<source ids="${h.chunk.sources.join(',')}" title="${h.chunk.title}">\n${h.chunk.text}\n</source>`)
+  const evidence = evidenceFor(hits)
+    .map((c) => `<source ids="${c.sources.join(',')}" title="${c.title}">\n${c.text}\n</source>`)
     .join('\n');
   const convo = req.history.map((m) => `${m.role === 'user' ? 'Visitor' : 'Byte'}: ${fence(m.text)}`).join('\n');
   return [
@@ -185,6 +195,9 @@ export async function answerQuestion(
     if (provider && opts.allowModel === false) res.notice = 'The live AI is resting (daily limit reached), so this answer comes from curated notes.';
     return res;
   }
+  // Short questions with a verified, hand-written answer (the suggestion chips, "who is he?", "is he
+  // available?") are answered instantly: no model round-trip for something we already know exactly.
+  if (req.question.trim().split(/\s+/).length <= 9 && matchFaq(req.question, req.context.project)) return offlineAnswer(req, hits);
   // the live model failed recently: don't make this visitor wait for the same failure
   const status = modelStatus();
   if (!status.live) {
@@ -193,7 +206,7 @@ export async function answerQuestion(
     return res;
   }
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 9_000);
+  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 10_000);
   try {
     const raw = await provider.generate({ system: SYSTEM_PROMPT, user: buildUserPrompt(req, hits), signal: controller.signal });
     if (!raw) throw new Error('empty');
@@ -201,12 +214,13 @@ export async function answerQuestion(
     if (!parsed.success) throw new Error('schema');
     const out = parsed.data;
     markUp();
-    // Citations must come from evidence actually provided for this question.
-    const allowed = new Set<SourceId>(hits.flatMap((h) => h.chunk.sources));
+    // Citations must come from evidence actually provided for this question (now the whole knowledge base).
+    const allowed = new Set<SourceId>(evidenceFor(hits).flatMap((c) => c.sources));
+    const preferred = new Set<SourceId>(hits.flatMap((h) => h.chunk.sources));
     const cited = out.citations.filter((id): id is SourceId => isSourceId(id) && allowed.has(id));
     return {
       answer: out.answer.trim(),
-      citations: toCitations(cited.length ? cited : out.found ? [...allowed].slice(0, 2) : ['resume']),
+      citations: toCitations(cited.length ? cited : out.found ? [...preferred].slice(0, 2) : ['resume']),
       action: parseAction(out.action),
       found: out.found,
       mode: 'ai',

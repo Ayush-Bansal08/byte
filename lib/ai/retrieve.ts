@@ -96,10 +96,22 @@ export function retrieve(question: string, opts: { project?: string; k?: number 
     .slice(0, opts.k ?? 6);
 }
 
+/** Project names a visitor might type. A question naming one is about that project, not a general topic. */
+const NAMED_PROJECTS: [string, RegExp][] = [
+  ['saka', /\bsaka\b/],
+  ['helios', /\bhelios\b/],
+  ['dockhealer', /\bdock ?healer\b/],
+  ['pollforge', /\bpoll ?forge\b/],
+  ['som-gold', /\bsom(?:[- ]?gold)?\b/],
+];
+
 export function matchFaq(question: string, project?: string): { faq: Faq; score: number } | null {
   const q = ` ${resolveQuery(question, project).toLowerCase()} `;
+  const named = NAMED_PROJECTS.filter(([, re]) => re.test(question.toLowerCase())).map(([slug]) => slug);
   let best: { faq: Faq; score: number } | null = null;
   for (const faq of FAQ) {
+    // "What makes DockHealer different…" must not get the general Docker/Kubernetes answer
+    if (named.length && !named.some((slug) => faq.id === slug || faq.id.startsWith(`${slug}-`))) continue;
     let score = 0;
     for (const key of faq.keys) if (q.includes(key)) score = Math.max(score, key.split(' ').length + 1);
     if (score && (!best || score > best.score)) best = { faq, score };

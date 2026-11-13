@@ -89,18 +89,17 @@ describe('model path', () => {
 
   it('returns validated model output and keeps only citations from the provided evidence', async () => {
     const r = await answerQuestion(
-      req('What did he build at ETHGlobal?'),
-      fake({ answer: 'SAKA, an AI DeFi agent.', found: true, citations: ['saka-showcase', 'som-repo'], action: 'goto:saka' }),
+      req('Walk me through what he built at ETHGlobal Mumbai and how the safety checks fit together'),
+      fake({ answer: 'SAKA, an AI DeFi agent.', found: true, citations: ['saka-showcase', 'saka-repo'], action: 'goto:saka' }),
     );
     expect(r.mode).toBe('ai');
     expect(r.provider).toBe('gemini');
-    expect(r.citations.map((c) => c.id)).toContain('saka-showcase');
-    expect(r.citations.map((c) => c.id)).not.toContain('som-repo'); // not in retrieved evidence
+    expect(r.citations.map((c) => c.id)).toEqual(['saka-showcase', 'saka-repo']);
     expect(r.action).toEqual({ type: 'goto', target: 'saka' });
   });
 
   it('falls back to curated notes when the model returns invalid JSON', async () => {
-    const r = await answerQuestion(req('Does he know Kubernetes?'), fake('not json'));
+    const r = await answerQuestion(req('Tell me about his Kubernetes experience across projects and internships'), fake('not json'));
     expect(r.mode).toBe('offline');
     expect(r.fallbackReason).toBe('bad-output');
   });
@@ -215,5 +214,34 @@ describe('online when the key works, offline when it does not', () => {
     const status = await checkProvider({ check: async () => Promise.reject(Object.assign(new Error('API key not valid'), { status: 403 })) });
     expect(status).toEqual({ live: false, reason: 'auth' });
     expect(await checkProvider(null)).toEqual({ live: false, reason: 'no-key' });
+  });
+});
+
+describe('offline answers stay on topic', () => {
+  it('a question naming a project is answered about that project, not by a generic quick answer', () => {
+    const r = offlineAnswer(AskRequest.parse({ question: 'What makes DockHealer different from just asking an AI for a Dockerfile?', context: { path: '/' } }));
+    expect(r.answer).toMatch(/Docker ?file|DockHealer|build/i);
+    expect(r.answer).not.toMatch(/Helios is a Kubernetes developer platform/);
+  });
+  it('general questions still get the quick answer', () => {
+    const r = offlineAnswer(AskRequest.parse({ question: 'Does he know Kubernetes?', context: { path: '/' } }));
+    expect(r.answer).toMatch(/Helios/);
+  });
+});
+
+describe('instant and complete', () => {
+  it('short questions with a verified answer never wait for the model', async () => {
+    let calls = 0;
+    const p: ProviderLike = { name: 'gemini', generate: async () => { calls++; return null; } };
+    const r = await answerQuestion(AskRequest.parse({ question: 'Is he available?', context: { path: '/' } }), p);
+    expect(calls).toBe(0);
+    expect(r.found).toBe(true);
+    expect(r.fallbackReason).toBeUndefined();
+  });
+  it('the model is given the whole knowledge base, best matches first', () => {
+    const q = AskRequest.parse({ question: 'Which project used Go?', context: { path: '/' } });
+    const prompt = buildUserPrompt(q, retrieve(q.question));
+    for (const name of ['SAKA', 'Helios', 'DockHealer', 'PollForge', 'SOM-Gold', 'Finn', 'UNSW']) expect(prompt).toContain(name);
+    expect(prompt.indexOf('Helios')).toBeLessThan(prompt.indexOf('PollForge'));
   });
 });
