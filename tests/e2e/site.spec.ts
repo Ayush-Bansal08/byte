@@ -6,7 +6,7 @@ const layer = (page: Page) => page.getByTestId('byte-layer');
 test.describe('content and navigation', () => {
   test('a recruiter sees who, what and proof above the fold', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('I build backends and AI agents, then I try to break them.');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('I build the parts of software you only notice when they break.');
     await expect(page.getByText('2nd place', { exact: true }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /Explore projects/ })).toBeVisible();
     await expect(page.getByRole('link', { name: /View résumé/ })).toBeVisible();

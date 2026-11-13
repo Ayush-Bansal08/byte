@@ -72,7 +72,7 @@ export function Hero() {
           />
         </div>
         <h1 id="hero-title" className="mt-3 text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.035em] sm:text-6xl lg:text-[4.2rem]">
-          I build backends and AI agents, <span className="ink">then I try to break them.</span>
+          I build the parts of software you only notice <span className="ink">when they break.</span>
         </h1>
         <p className="mt-6 max-w-xl text-[1.08rem] text-muted">{PROFILE.intro}</p>
         <div className="mt-8 flex flex-wrap gap-2.5">

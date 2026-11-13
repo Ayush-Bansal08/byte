@@ -3,7 +3,7 @@ import type { SourceId } from './sources';
 export const PROFILE = {
   name: 'Ayush Bansal',
   role: 'Software engineer',
-  headline: 'I build backends and AI agents, then I try to break them.',
+  headline: 'I build the parts of software you only notice when they break.',
   /** Shown under the headline. Deliberately free of awards and employers: those have their own sections. */
   intro:
     'I’m a third-year student at LNMIIT. Most of my work lives behind the screen: APIs, queues, deploy pipelines, Kubernetes, and AI agents that are allowed to do real things. I spend as long on the ways they fail as on the happy path, and the write-ups below show both.',
@@ -28,7 +28,7 @@ export const PROFILE = {
     phone: 'tel:+919911223788',
   },
   about: [
-    'I’m based in Gurgaon and study electronics and communication engineering at LNMIIT, but most of my time goes into software. Backend work pulls me in because it’s where things break quietly: a message goes missing, a deploy stops halfway, a number looks right and isn’t.',
+    'I’m based in Gurgaon and study electronics and communication engineering at LNMIIT, but most of my time goes into software. Backend work pulls me in because that’s where the sneaky bugs live: a message goes missing, a deploy stops halfway, a number looks right and isn’t.',
     'When I build something, I start by asking how it fails. What happens if the network drops, if the AI says something odd, if someone clicks twice? Those cases get tests before I call anything finished.',
     'Research at UNSW taught me to check numbers before I believe them. So every figure on this site has a link next to it, and you’re welcome to check mine.',
   ],
