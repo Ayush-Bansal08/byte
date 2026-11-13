@@ -63,7 +63,7 @@ export const PROJECTS: Project[] = [
     slug: 'saka',
     name: 'SAKA',
     kicker: 'Autonomous AI agent · DeFi',
-    tagline: 'Tell an AI “swap $5 of ETH for USDC” and it does it, after safety checks it can’t talk its way past. Go to sleep, and it keeps watching your wallet, pinging you on Telegram when it spots a move worth making.',
+    tagline: 'An AI trading agent that doesn’t wait to be asked. Say “swap $5 of ETH for USDC” and it does it, after safety checks it can’t talk its way past. Then go to sleep: unprompted, it keeps thinking for you, scanning your wallet every minute, spotting moves worth making and lining each one up on Telegram, already safety-checked and one tap from done.',
     badge: '2nd place · 0G Private Computer track · ETHGlobal Mumbai 2026',
     period: 'Nov 5–7, 2026',
     kind: 'Hackathon team project',
