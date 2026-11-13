@@ -53,8 +53,30 @@ export async function POST(req: NextRequest) {
 }
 
 /** What visitors will get right now: 'ai' only if the key actually works (verified, cached 10 min). */
-export async function GET() {
+let lastProbe = 0;
+
+export async function GET(req?: NextRequest) {
   const provider = getProvider();
+  // Diagnostics: ?probe=1 times one tiny real generation. Shows the model name, timing and a secret-free
+  // reason; at most once a minute so it can't be used to burn the quota.
+  if (req?.nextUrl.searchParams.get('probe') === '1' && provider) {
+    if (Date.now() - lastProbe < 60_000) return json({ error: 'Probe ran less than a minute ago.' }, 429);
+    lastProbe = Date.now();
+    const t = Date.now();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20_000);
+    try {
+      await provider.check();
+      const checkMs = Date.now() - t;
+      const raw = await provider.generate({ system: 'Reply with JSON only.', user: 'Return {"answer":"ok","found":true,"citations":[],"action":"none"}', signal: controller.signal });
+      return json({ ok: Boolean(raw), provider: provider.name, model: provider.model, checkMs, generateMs: Date.now() - t - checkMs });
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      return json({ ok: false, provider: provider.name, model: provider.model, ms: Date.now() - t, status: status ?? null, aborted: controller.signal.aborted, message: err instanceof Error ? err.message.replace(/key=[^&\s]+/gi, 'key=…').slice(0, 240) : 'error' });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
   const status = await checkProvider(provider);
-  return json({ mode: status.live ? 'ai' : 'offline', provider: provider?.name ?? null, ...(status.reason && provider ? { reason: status.reason } : {}) });
+  return json({ mode: status.live ? 'ai' : 'offline', provider: provider?.name ?? null, model: provider?.model ?? null, ...(status.reason && provider ? { reason: status.reason } : {}) });
 }

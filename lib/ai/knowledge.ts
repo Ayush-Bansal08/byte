@@ -215,7 +215,7 @@ export const FAQ: Faq[] = [
   },
   {
     id: 'team',
-    keys: ['team', 'teamwork', 'collaborat*', 'work with others', 'solo'],
+    keys: ['teamwork', 'team player', 'in a team', 'on a team', 'worked in a team', 'work in a team', 'collaborat*', 'work with others', 'solo projects'],
     answer:
       'Both. SAKA was a team hackathon entry (all 41 public commits are his), Finn meant shipping inside a production team where his 25+ pull requests were reviewed and merged, and SOM-Gold is a four-author research paper. Helios, DockHealer and PollForge are solo projects.',
     sources: ['saka-repo', 'resume', 'som-citation'],
@@ -313,7 +313,7 @@ export const FAQ: Faq[] = [
   },
   {
     id: 'kubernetes',
-    keys: ['kubernetes', 'k8s', 'devops', 'cloud', 'platform', 'aks', 'docker'],
+    keys: ['kubernetes', 'k8s', 'devops', 'cloud', 'platform', 'aks', 'docker', 'kubernetes in production', 'running kubernetes', 'k8s in production', 'platform engineering', 'sre'],
     answer:
       'Yes. Helios is a Kubernetes developer platform with a custom Go operator, ArgoCD GitOps and Prometheus-gated canary releases on k3s/Azure. PollForge runs on Azure AKS with OIDC-based CI/CD, and at Finn he worked with Docker, Kubernetes and Nginx in production.',
     sources: ['helios-repo', 'pollforge-repo', 'resume'],
